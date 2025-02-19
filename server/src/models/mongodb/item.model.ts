@@ -1,17 +1,23 @@
 import mongoose, { model, Schema } from "mongoose";
 
 const CONDITION = ["NEW", "OLD", "USE"];
-const STAUTE = ["UNDER_REVIEW", "PUBLISHED", "SOLD", "REJECT"];
+const STATE = ["UNDER_REVIEW", "PUBLISHED", "SOLD", "REJECT"];
 
 const ItemSchema: Schema = new Schema(
   {
+    userId: {
+      type: String,
+      required: true,
+      default: "6782672e6150f9b649f86906",
+    },
     category: { type: String, required: true, trim: true },
-    subcategory: { type: String, required: true },
-    brand: { type: String, required: true },
+    subcategory: { type: String, required: true, trim: true },
+    brand: { type: String, required: true, trim: true },
     itemImages: [
       {
         imageUrl: String,
         rotateDeg: Number,
+        required: true,
       },
     ],
     communications: [],
@@ -23,34 +29,29 @@ const ItemSchema: Schema = new Schema(
       enum: CONDITION,
       default: "NEW",
     },
-    price: { type: Number, required: true },
-    allowNegotiate: { type: Boolean, default: false },
-    phone: { type: String, optional: true },
-    isSavedForLater: { type: Boolean, optional: true, default: false },
-    location: { type: String, required: true },
-    userId: {
-      type: String,
-      required: true,
-      default: "6782672e6150f9b649f86906",
-    },
-    isFirstItem: { type: Boolean, default: false },
-    isHighlighted: { type: Boolean, default: false },
     status: {
       type: String,
       required: true,
-      enum: STAUTE,
-      default: "under review",
+      enum: STATE,
+      default: "UNDER_REVIEW",
     },
-    promotion: { type: Boolean, default: false },
-    discount: { type: Number, required: true, default: 0, optional: true },
-    type: { type: String, optional: true },
-    size: { type: String, optional: true },
-    color: { type: String, optional: true },
-    isDiscount: { type: Boolean, default: false, optional: true },
     paymentOptions: {
       type: [String],
       default: [],
     },
+    location: { type: String, required: true },
+    phone: { type: String, optional: true },
+    type: { type: String, optional: true },
+    size: { type: String, optional: true },
+    color: { type: String, optional: true },
+    price: { type: Number, required: true },
+    discount: { type: Number, required: true, default: 0, optional: true },
+    isDiscount: { type: Boolean, default: false, optional: true },
+    isSavedForLater: { type: Boolean, optional: true, default: false },
+    allowNegotiate: { type: Boolean, default: false },
+    isFirstItem: { type: Boolean, default: false },
+    isHighlighted: { type: Boolean, default: false },
+    promotion: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
