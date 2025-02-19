@@ -1,0 +1,34 @@
+{
+    "env": {
+      "browser": true,
+      "es2021": true,
+      "node": true
+    },
+    "extends": [
+      "eslint:recommended",
+      "plugin:@typescript-eslint/recommended",
+      "plugin:prettier/recommended"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+      "ecmaVersion": "latest",
+      "sourceType": "module"
+    },
+    "plugins": ["@typescript-eslint"],
+    "rules": {
+      "no-unused-vars": "warn",
+      "no-console": "warn",
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/explicit-function-return-type": "off"
+    }
+  }
+  
+
+//   بعد إعداد ESLint، شغّله لفحص الكود في المشروع:
+//   npx eslint . --ext .ts,.tsx
+//   👉 سيقوم بفحص جميع الملفات TypeScript ويظهر الأخطاء.
+
+//   تشغيل ESLint مع fix لإصلاح الأخطاء تلقائيًا
+//   لتصحيح الأخطاء تلقائيًا، استخدم:
+//   npx eslint . --ext .ts,.tsx --fix
+//   👉 سيقوم بتنسيق الكود وحل المشاكل البسيطة.  
