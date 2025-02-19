@@ -5,8 +5,10 @@
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
     "esModuleInterop": true, // سهل استيراد المكتبات اللي بتستخدم import في TypeScript.
     "skipLibCheck": true, // يسرّع التحويل عن طريق تجاهل فحص التعريفات في مكتبات
-    "forceConsistentCasingInFileNames": true  //  يمنع مشاكل الأحرف الكبيرة والصغيرة في أسماء الملفات (App.ts ≠ app.ts).
+    "forceConsistentCasingInFileNames": true //  يمنع مشاكل الأحرف الكبيرة والصغيرة في أسماء الملفات (App.ts ≠ app.ts).
   }
 }

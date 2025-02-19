@@ -1,5 +1,6 @@
-import connectToMongoDB from "./src/config/mongooseConnection";
+import connectToMongoDB from "./src/config/mongooseConfig";
 import router from "./src/router";
+import { auth } from "./src/config/firebaseConfig";
 import swaggerOptions from "./src/swaggerConfig";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
@@ -33,7 +34,12 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use("/api-doc", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 app.use("/api/v1", router);
 
-// Connection MongoDB
+// Connection MongoDB  &  Firebase
+auth
+  .listUsers(1)
+  .then(() => console.log("Firebase Authentication is working!"))
+  .catch((error) => console.error("Firebase Authentication failed:", error));
+
 Promise.all([connectToMongoDB()])
   .then(() => {
     app.listen(process.env.PROT || 8080, () => {
