@@ -1,12 +1,10 @@
-import swaggerJSDoc from "swagger-jsdoc";
-
 const swaggerOptions = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "Halla Deals",
+      title: "E-Commerce-V3",
       version: "1.0.0",
-      description: "API documentation for the Halla Deals",
+      description: "API documentation for the E-Commerce",
     },
     servers: [
       {
