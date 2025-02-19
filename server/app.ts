@@ -1,6 +1,7 @@
 import connectToMongoDB from "./src/config/mongooseConfig";
 import router from "./src/router";
 import { auth } from "./src/config/firebaseConfig";
+import { client } from "./src/config/redisConfig";
 import swaggerOptions from "./src/swaggerConfig";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
@@ -15,15 +16,15 @@ dotenv.config();
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
 const app: Application = express();
 
-// cors options
+// Cors options
 const corsOptions = {
   origin: "*",
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type ,Authorization"],
-  Credential: true,
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
 };
 
-//  middleware
+//  Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
@@ -34,22 +35,18 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use("/api-doc", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 app.use("/api/v1", router);
 
-// Connection MongoDB  &  Firebase
-auth
-  .listUsers(1)
-  .then(() => console.log("Firebase Authentication is working!"))
-  .catch((error) => console.error("Firebase Authentication failed:", error));
-
-Promise.all([connectToMongoDB()])
+// Connection MongoDB  &  Firebase & redis
+Promise.all([connectToMongoDB(), auth.listUsers(1), client.connect()])
   .then(() => {
-    app.listen(process.env.PROT || 8080, () => {
-      console.log(`Server is running on port ${process.env.PROT}`);
-      console.log(
-        `API Documentation: http://localhost:${process.env.PROT}/api-docs`
-      );
+    const PORT = process.env.PORT || 8080;
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+      console.log(`API Documentation: http://localhost:${PORT}/api-docs`);
+      console.log("Firebase Authentication is working!");
+      console.log("Redis is connected!");
     });
   })
-  .catch((err: any) => {
-    console.error(err.message);
+  .catch((err) => {
+    console.error("Server initialization failed:", err);
     process.exit(1);
   });
