@@ -88,9 +88,11 @@ class AuthController {
 
       // Get token and encrypt token and set in cookie
       // prettier-ignore
-      const userLogin = await signInWithEmailAndPassword(authentication,email,password);
-      const token = await userLogin.user.getIdToken();
-      const tokenCrypt = Buffer.from(token).toString("base64");
+      const userLogin = await signInWithEmailAndPassword(authentication, email, password);
+      userLogin.user.uid
+      const tokenCrypt = Buffer.from(
+        await userLogin.user.getIdToken()
+      ).toString("base64");
 
       res.cookie("AuthToken", tokenCrypt, {
         httpOnly: false,
