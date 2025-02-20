@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import bcrypt from "bcrypt";
 import {
   auth,
   authentication,
@@ -57,17 +56,7 @@ class AuthController {
       try {
         existingUser = await auth.getUserByEmail(email);
       } catch (error: any) {
-        if (error.code !== "auth/user-not-found") {
-          res.status(500).json({ error: "Error checking user existence" });
-          return;
-        } else {
-          res.status(500).json({ error: "Unknown error occurred" });
-          return;
-        }
-      }
-
-      if (existingUser) {
-        res.status(409).json({ error: "Email is already registered." });
+        res.status(404).json({ error: "User not found." });
         return;
       }
 
@@ -91,10 +80,7 @@ class AuthController {
         res.status(404).json({ error: "User not found." });
         return;
       }
-      if (!existingUser) {
-        res.status(401).json({ error: "Invalid email or password." });
-        return;
-      }
+
       if (!existingUser.emailVerified) {
         res.status(400).json({ message: "Email is not verified yet" });
         return;
@@ -104,15 +90,11 @@ class AuthController {
       // prettier-ignore
       const userLogin = await signInWithEmailAndPassword(authentication,email,password);
       const token = await userLogin.user.getIdToken();
-      const tokenCrypt = await bcrypt.hash(
-        token,
-        Number(process.env.SALT_ROUNDS)
-      );
-      const tokenCryptBase64 = Buffer.from(tokenCrypt).toString("base64");
+      const tokenCrypt = Buffer.from(token).toString("base64");
 
-      res.cookie("AuthToken", tokenCryptBase64, {
+      res.cookie("AuthToken", tokenCrypt, {
         httpOnly: false,
-        expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14),
+        expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14), // 14Days
         sameSite: "strict",
         secure: process.env.NODE_ENV === "production",
       });
@@ -142,16 +124,12 @@ class AuthController {
       try {
         existingUser = await auth.getUser(uid);
       } catch (error: any) {
-        if (error.code === "auth/user-not-found") {
-          res.status(404).json({ error: "User not found." });
-          return;
-        }
-        res.status(500).json({ error: "Failed to fetch user." });
+        res.status(404).json({ error: "User not found." });
         return;
       }
 
-      if (!existingUser.emailVerified) {
-        res.status(400).json({ message: "Email is not verified yet" });
+      if (existingUser.emailVerified) {
+        res.status(200).json({ message: "Email is already verified" });
         return;
       }
 
