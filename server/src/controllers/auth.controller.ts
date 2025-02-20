@@ -45,11 +45,23 @@ class AuthController {
   public async registerUser(req: Request, res: Response): Promise<void> {
     try {
       const { email, password, role } = req.body;
-      const existingUser = await auth.getUserByEmail(email);
+
+      let existingUser;
+      try {
+        existingUser = await auth.getUserByEmail(email);
+      } catch (error: any) {
+        if (error.code !== "auth/user-not-found") {
+          res.status(500).json({ error: "Error checking user existence" });
+        } else {
+          res.status(500).json({ error: "Unknown error occurred" });
+        }
+      }
+
       if (existingUser) {
         res.status(409).json({ error: "Email is already registered." });
         return;
       }
+
       await this.serviceInstance.registerUser(email, password, role, req.body);
       res.status(201).json({
         message: "User registered successfully. Please verify your email.",
@@ -66,15 +78,21 @@ class AuthController {
 
   public async verifyEmail(req: Request, res: Response): Promise<void> {
     try {
-      const { uid } = req.query;
+      const { uid } = req.body;
       if (!uid) {
         res.status(400).json({ error: "Invalid link please send again" });
         return;
       }
 
-      const existingUser = await auth.getUser(String(uid));
-      if (!existingUser) {
-        res.status(404).json({ error: "User not found." });
+      let existingUser;
+      try {
+        existingUser = await auth.getUser(uid);
+      } catch (error: any) {
+        if (error.code === "auth/user-not-found") {
+          res.status(404).json({ error: "User not found." });
+          return;
+        }
+        res.status(500).json({ error: "Failed to fetch user." });
         return;
       }
 
@@ -85,7 +103,9 @@ class AuthController {
 
       await this.serviceInstance.verifyEmail(String(uid));
       res.status(200).json({ message: "Email verified successfully." });
-    } catch (error) {}
+    } catch (error) {
+      AuthController.handleError(res, "Internal server error.", error);
+    }
   }
 }
 

@@ -2,7 +2,8 @@ import { UserDto, UserDtoType } from "../dto/user.dto";
 import User from "../models/mongodb/user.model";
 import { auth } from "../config/firebaseConfig";
 import { client } from "../config/redisConfig";
-import admin from "firebase-admin";
+import { sendVerificationEmail } from "../utils/emailUtil";
+import { Console } from "console";
 
 class AuthService {
   private static instance: AuthService;
@@ -29,15 +30,16 @@ class AuthService {
         email: email,
         userId: userRegister.uid,
         role: role || "USER",
-        dateOfJoining: new Date(),
+        dateOfJoining: new Date().toISOString(),
       });
-
       const parsed = UserDto.safeParse(user);
       if (!parsed.success) {
         throw new Error("Invalid user data");
       }
+
       // Store user details in caching and send verification to use email
-      await auth.generateEmailVerificationLink(email);
+      const verificationLink = await auth.generateEmailVerificationLink(email);
+      await sendVerificationEmail(email, verificationLink);
       await client.setEx(
         `userId:${userRegister.uid}`,
         3600, // After 1 hours delete user auto from caching
@@ -57,6 +59,7 @@ class AuthService {
         throw new Error("User not found in cache");
       }
       const userData = JSON.parse(userDataString);
+      userData.dateOfJoining = new Date(userData.dateOfJoining);
 
       const parsed = UserDto.safeParse(userData);
       if (!parsed.success) {
