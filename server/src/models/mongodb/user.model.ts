@@ -1,4 +1,5 @@
 import mongoose, { Schema } from "mongoose";
+import { UserDtoType } from "../../dto/user.dto";
 const ROLES = ["USER", "ADMIN", "MANAGER", "CALL_CENTER"];
 
 // Defining the schema for the user
@@ -121,5 +122,5 @@ const userSchema: Schema = new Schema(
   }
 );
 
-const user = mongoose.model("users", userSchema);
-export default user;
+const User = mongoose.model<UserDtoType>("users", userSchema);
+export default User;

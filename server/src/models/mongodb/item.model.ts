@@ -1,4 +1,5 @@
 import mongoose, { model, Schema } from "mongoose";
+import { ItemDtoType } from "../../dto/item.dto";
 
 const CONDITION = ["NEW", "OLD", "USE"];
 const STATE = ["UNDER_REVIEW", "PUBLISHED", "SOLD", "REJECT"];
@@ -56,6 +57,5 @@ const ItemSchema: Schema = new Schema(
   { timestamps: true }
 );
 
-// const item = Model<ItemDtoType>("items", ItemSchema);
-const item = model("items", ItemSchema);
-export default item;
+const Item = model<ItemDtoType>("items", ItemSchema);
+export default Item;
