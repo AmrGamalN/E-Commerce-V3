@@ -1,7 +1,14 @@
 import { Request, Response } from "express";
-import { auth } from "../config/firebaseConfig";
+import bcrypt from "bcrypt";
+import {
+  auth,
+  authentication,
+  signInWithEmailAndPassword,
+} from "../config/firebaseConfig";
 import { ZodError } from "zod";
 import AuthService from "../services/authService";
+import dotenv from "dotenv";
+dotenv.config();
 
 class AuthController {
   private static instance: AuthController;
@@ -52,8 +59,10 @@ class AuthController {
       } catch (error: any) {
         if (error.code !== "auth/user-not-found") {
           res.status(500).json({ error: "Error checking user existence" });
+          return;
         } else {
           res.status(500).json({ error: "Unknown error occurred" });
+          return;
         }
       }
 
@@ -68,6 +77,51 @@ class AuthController {
       });
     } catch (error) {
       AuthController.handleError(res, "Failed to register user", error);
+    }
+  }
+
+  // Login user
+  public async login(req: Request, res: Response): Promise<void> {
+    try {
+      const { email, password } = req.body;
+      let existingUser;
+      try {
+        existingUser = await auth.getUserByEmail(email);
+      } catch (error: any) {
+        res.status(404).json({ error: "User not found." });
+        return;
+      }
+      if (!existingUser) {
+        res.status(401).json({ error: "Invalid email or password." });
+        return;
+      }
+      if (!existingUser.emailVerified) {
+        res.status(400).json({ message: "Email is not verified yet" });
+        return;
+      }
+
+      // Get token and encrypt token and set in cookie
+      // prettier-ignore
+      const userLogin = await signInWithEmailAndPassword(authentication,email,password);
+      const token = await userLogin.user.getIdToken();
+      const tokenCrypt = await bcrypt.hash(
+        token,
+        Number(process.env.SALT_ROUNDS)
+      );
+      const tokenCryptBase64 = Buffer.from(tokenCrypt).toString("base64");
+
+      res.cookie("AuthToken", tokenCryptBase64, {
+        httpOnly: false,
+        expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14),
+        sameSite: "strict",
+        secure: process.env.NODE_ENV === "production",
+      });
+
+      res.status(200).json({
+        message: "login successfully",
+      });
+    } catch (error) {
+      AuthController.handleError(res, "Failed to login user", error);
     }
   }
 
