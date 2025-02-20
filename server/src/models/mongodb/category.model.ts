@@ -1,4 +1,5 @@
 import mongoose, { model, Schema } from "mongoose";
+import { CategoryDtoType } from "../../dto/category.dto";
 
 const subCategorySchema: Schema = new Schema({
   name: { type: String, required: true },
@@ -26,6 +27,5 @@ const categorySchema: Schema = new Schema(
   { timestamps: true }
 );
 
-// const Category = model<CategoryDtoType>("categories", categorySchema);
-const Category = model("categories", categorySchema);
+const Category = model<CategoryDtoType>("categories", categorySchema);
 export default Category;
