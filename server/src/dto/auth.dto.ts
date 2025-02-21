@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 export const RegisterDto = z.object({
-  name: z.string().nullable(),
-  mobile: z.string().nullable(),
-  gender: z.string().nullable(),
+  name: z.string(),
+  mobile: z.string(),
+  gender: z.string(),
   business: z.boolean().default(false),
   personal: z.boolean().default(true),
   coverImage: z.string().default(""),

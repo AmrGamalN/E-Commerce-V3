@@ -1,9 +1,9 @@
 import express, { Request, Response, NextFunction } from "express";
 import AuthController from "../controllers/auth.controller";
 import { loginValid, registerValid } from "../validations/auth.valid";
-import { validatorResult } from "../validations/validationResult.valid";
+import { validateResult } from "../validations/general.valid";
 import { uploadFile, upload } from "../middlewares/uploadFile.middleware";
-import { parser } from "../middlewares/parser.middleware";
+import { userParser } from "../middlewares/parser.middleware";
 const controller = AuthController.getInstance();
 const router = express.Router();
 
@@ -16,9 +16,9 @@ router.post(
       { maxCount: 1, name: "coverImage" },
     ])
   ),
-  parser,
+  userParser,
   registerValid,
-  validatorResult,
+  validateResult,
   async (req: Request, res: Response, next: NextFunction) => {
     await controller.registerUser(req, res);
   }
@@ -28,7 +28,7 @@ router.post(
 router.post(
   "/login",
   loginValid,
-  validatorResult,
+  validateResult,
   async (req: Request, res: Response) => {
     await controller.login(req, res);
   }

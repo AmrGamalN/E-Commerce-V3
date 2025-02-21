@@ -27,8 +27,11 @@ class AuthenticationMiddleware {
         return;
       }
 
-      const role = await User.findOne({ userId: user?.user_id }, { role: 1 });
-      req.user = { user, role };
+      const role = await User.findOne(
+        { userId: user?.user_id },
+        { role: 1, _id: 0 }
+      );
+      req.user = { user_id: user.user_id, role };
       next();
     } catch (error) {
       res.status(500).json({ message: "Authentication error." });
@@ -47,16 +50,17 @@ class AuthenticationMiddleware {
         "MANAGER",
         "CALL_CENTER",
       ];
-      const userid = req.user?.user_id;
-      const role = req.user?.role;
+      const userId = req.user?.user_id;
+      const role = req.user?.role.role;
 
-      if (!userid) {
+      if (!userId) {
         res.status(401).json({ message: "Unauthorized: Missing user ID" });
         return;
       }
 
-      if (!allowedRoles.includes(String(role))) {
+      if (!allowedRoles.includes(role)) {
         res.status(403).json({ message: "Forbidden: Access denied" });
+        return;
       }
       next();
     } catch (error) {
@@ -64,14 +68,14 @@ class AuthenticationMiddleware {
     }
   }
 
-  public static allowTo(role: string) {
+  public static allowTo(role: string[]) {
     return (req: Request, res: Response, next: NextFunction) => {
-      const userRole = req.user?.role;
+      const userRole = req.user?.role.role;
       if (!userRole) {
         res.status(401).json({ error: "Unauthorized: No user role found" });
         return;
       }
-      if (userRole !== role) {
+      if (!role.includes(userRole)) {
         res.status(403).json({ error: "Forbidden: Access denied" });
         return;
       }
