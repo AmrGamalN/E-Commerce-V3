@@ -1,11 +1,17 @@
 import { z } from "zod";
-import { baseUserSchema } from "./user.dto";
 
-export const RegisterDto = baseUserSchema.extend({
-  password: z
-    .string()
-    .min(6, "Password must be at least 6 characters")
-    .nonempty("Password is required"),
+export const RegisterDto = z.object({
+  name: z.string().nullable(),
+  mobile: z.string().nullable(),
+  gender: z.string().nullable(),
+  business: z.boolean().default(false),
+  personal: z.boolean().default(true),
+  coverImage: z.string().default(""),
+  paymentOptions: z.array(z.string().nonempty()).default([]),
+  description: z.string().optional().default(""),
+  addressIds: z.array(z.string().nonempty()).default([]),
+  allowedToShow: z.array(z.string()).default([]),
+  profileImage: z.string().default(""),
 });
 
 export type RegisterDtoType = z.infer<typeof RegisterDto>;

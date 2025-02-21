@@ -8,6 +8,7 @@ declare module "express-serve-static-core" {
     user?: any;
   }
 }
+
 class AuthenticationMiddleware {
   public static async verifyIdToken(
     req: Request,
@@ -53,10 +54,7 @@ class AuthenticationMiddleware {
         return;
       }
 
-      const user = await User.findOne(
-        { userId: userid },
-        { userId: 1, role: 1, email: 1, _id: 0 }
-      );
+      const user = await User.findOne({ userid }).select("userId role email");
 
       if (!user) {
         res.status(404).json({ message: "User not found" });
