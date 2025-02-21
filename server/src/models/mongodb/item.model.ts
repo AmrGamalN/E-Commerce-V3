@@ -1,7 +1,6 @@
 import mongoose, { model, Schema } from "mongoose";
 import { ItemDtoType } from "../../dto/item.dto";
 
-
 const CONDITION = ["NEW", "OLD", "USED"];
 const STATE = ["UNDER_REVIEW", "APPROVED", "PUBLISHED", "SOLD", "REJECT"];
 
@@ -10,7 +9,6 @@ const ItemSchema: Schema = new Schema(
     userId: {
       type: String,
       required: true,
-      default: "6782672e6150f9b649f86906",
     },
     category: { type: String, required: true, trim: true },
     subcategory: { type: String, required: true, trim: true },
@@ -19,7 +17,10 @@ const ItemSchema: Schema = new Schema(
       {
         imageUrl: String,
         rotateDeg: Number,
-        required: true,
+        _id: {
+          type: String,
+          default: () => new mongoose.Types.ObjectId().toString(),
+        },
       },
     ],
     communications: [],

@@ -1,5 +1,5 @@
-import { body, check, validationResult } from "express-validator";
-import { checkArray } from "./checkArray.valid";
+import { body, check } from "express-validator";
+import { checkArray } from "./general.valid";
 
 export const loginValid = [
   body("email").isEmail().withMessage("PLEASE ENTER A VALID EMAIL"),

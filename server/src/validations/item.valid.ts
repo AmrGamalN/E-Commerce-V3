@@ -1,7 +1,7 @@
 import { check } from "express-validator";
-import { checkArray } from "./checkArray.valid";
+import { checkArray } from "./general.valid";
 
-export const productValidation = [
+export const itemValid = [
   check("category")
     .trim()
     .notEmpty()
@@ -12,15 +12,16 @@ export const productValidation = [
     .trim()
     .notEmpty()
     .withMessage("SUBCATEGORY IS REQUIRED")
-    .customSanitizer((value) =>value.toLowerCase()),
+    .customSanitizer((value) => value.toLowerCase()),
 
   check("brand")
     .trim()
     .notEmpty()
     .withMessage("BRAND IS REQUIRED")
-    .customSanitizer((value) => value.toUpperCase()),
+    .customSanitizer((value) => value.toLowerCase()),
 
   check("communications")
+    .trim()
     .isArray({ min: 1 })
     .withMessage("PAYMENT OPTIONS MUST BE AN ARRAY")
     .matches(/^(phone|chat)$/)
@@ -41,6 +42,7 @@ export const productValidation = [
     .withMessage("CONDITION MUST BE 'NEW' OR 'USED' OR 'OLD'"),
 
   check("paymentOptions")
+    .trim()
     .optional()
     .isArray({ min: 1 })
     .withMessage("PAYMENT OPTIONS MUST BE AN ARRAY"),

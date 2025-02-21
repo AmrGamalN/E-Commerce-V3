@@ -1,13 +1,14 @@
 import { z } from "zod";
 
-export const baseUserSchema = z.object({
-  name: z.string().nullable(),
+export const UserDto = z.object({
+  userId: z.string().nonempty("User ID is required"),
+  name: z.string(),
   email: z.string().email().nonempty("Email is required"),
-  mobile: z.string().nullable(),
-  gender: z.string().nullable(),
+  mobile: z.string(),
+  gender: z.string(),
   role: z.enum(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]).default("USER"),
   coverImage: z.string().default(""),
-  lastSeen: z.date(),//.default(new Date()),
+  lastSeen: z.date().default(new Date()),
   description: z.string().default(""),
   business: z.boolean().default(false),
   personal: z.boolean().default(true),
@@ -30,12 +31,6 @@ export const baseUserSchema = z.object({
       z.object({ id: z.string().default(""), name: z.string().default("") })
     )
     .default([]),
-  dateOfJoining: z.date().default(new Date()),
-});
-
-// Add in mongoDb
-export const UserDto = baseUserSchema.extend({
-  userId: z.string().nonempty("User ID is required"),
   dateOfJoining: z.date().default(new Date()),
 });
 
