@@ -1,9 +1,10 @@
-import { UserDto, UserDtoType } from "../dto/user.dto";
+import { UserDto } from "../dto/user.dto";
 import User from "../models/mongodb/user.model";
 import { auth } from "../config/firebaseConfig";
 import { client } from "../config/redisConfig";
 import { sendVerificationEmail } from "../utils/emailUtil";
-import { Console } from "console";
+import { RegisterDtoType } from "../dto/auth.dto";
+import moment from "moment-timezone";
 
 class AuthService {
   private static instance: AuthService;
@@ -21,7 +22,7 @@ class AuthService {
     email: string,
     password: string,
     role: string,
-    body: UserDtoType
+    body: RegisterDtoType
   ): Promise<void> {
     try {
       const userRegister = await auth.createUser({ email, password });
@@ -30,8 +31,10 @@ class AuthService {
         email: email,
         userId: userRegister.uid,
         role: role || "USER",
-        dateOfJoining: new Date().toISOString(),
+        dateOfJoining: moment().tz("Africa/Cairo").toISOString(),
+        lastSeen: moment().tz("Africa/Cairo").toISOString(),
       });
+
       const parsed = UserDto.safeParse(user);
       if (!parsed.success) {
         throw new Error("Invalid user data");
@@ -52,6 +55,26 @@ class AuthService {
     }
   }
 
+  // Login user
+  async login(uid: string): Promise<void> {
+    try {
+      await User.findOneAndUpdate(
+        { userId: uid },
+        {
+          $set: {
+            active: true,
+            lastSeen: moment().tz("Africa/Cairo").toISOString(),
+          },
+        }
+      );
+    } catch (error) {
+      throw new Error(
+        error instanceof Error ? error.message : "Failed to login user"
+      );
+    }
+  }
+
+  // Verify email
   async verifyEmail(uid: string): Promise<void> {
     try {
       const userDataString = (await client.get(`userId:${uid}`)) ?? "";
@@ -60,6 +83,7 @@ class AuthService {
       }
       const userData = JSON.parse(userDataString);
       userData.dateOfJoining = new Date(userData.dateOfJoining);
+      userData.lastSeen = new Date(userData.lastSeen);
 
       const parsed = UserDto.safeParse(userData);
       if (!parsed.success) {

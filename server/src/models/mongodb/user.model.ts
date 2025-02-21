@@ -7,7 +7,7 @@ const userSchema: Schema = new Schema(
   {
     name: {
       type: String,
-      required: false,
+      required: true,
     },
     email: {
       type: String,
@@ -30,10 +30,12 @@ const userSchema: Schema = new Schema(
     },
     business: {
       type: Boolean,
+      required: true,
       default: false,
     },
     personal: {
       type: Boolean,
+      required: true,
       default: true,
     },
     active: {
@@ -61,7 +63,7 @@ const userSchema: Schema = new Schema(
       default: 0,
     },
     lastSeen: {
-      type: String,
+      type: Date,
       default: "",
     },
     paymentOptions: {

@@ -7,6 +7,7 @@ import {
 import { ZodError } from "zod";
 import AuthService from "../services/authService";
 import dotenv from "dotenv";
+import path from "path";
 dotenv.config();
 
 class AuthController {
@@ -51,16 +52,45 @@ class AuthController {
   public async registerUser(req: Request, res: Response): Promise<void> {
     try {
       const { email, password, role } = req.body;
+      const files: string[] = req.files
+        ? Object.values(req.files).flatMap((fileArray) =>
+            (fileArray as Express.Multer.File[]).map((file) => file.path)
+          )
+        : [];
 
-      let existingUser;
+      const parser = {
+        name: req.body.name,
+        mobile: req.body.mobile,
+        gender: req.body.gender,
+        business: Boolean(req.body.business == "true" ? true : false),
+        personal: Boolean(req.body.personal == "true" ? true : false),
+        coverImage: files[1] || "",
+        paymentOptions: req.body.paymentOptions.split(","),
+        description: req.body.description,
+        addressIds: req.body.addressIds.split(","),
+        allowedToShow: req.body.allowedToShow.split(","),
+        profileImage: files[0] || "",
+      };
+
+
+      let existingUser = null;
       try {
         existingUser = await auth.getUserByEmail(email);
       } catch (error: any) {
-        res.status(404).json({ error: "User not found." });
+        if (error.code === "auth/user-not-found") {
+          existingUser = null;
+        } else {
+          res.status(500).json({ error: "Error checking user existence" });
+          return;
+        }
+      }
+      
+      if (existingUser) {
+        res.status(409).json({ message: "Email already exists." });
         return;
       }
 
-      await this.serviceInstance.registerUser(email, password, role, req.body);
+      await this.serviceInstance.registerUser(email, password, role, parser);
       res.status(201).json({
         message: "User registered successfully. Please verify your email.",
       });
@@ -89,18 +119,19 @@ class AuthController {
       // Get token and encrypt token and set in cookie
       // prettier-ignore
       const userLogin = await signInWithEmailAndPassword(authentication, email, password);
-      userLogin.user.uid
+
       const tokenCrypt = Buffer.from(
         await userLogin.user.getIdToken()
       ).toString("base64");
 
       res.cookie("AuthToken", tokenCrypt, {
         httpOnly: false,
-        expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14), // 14Days
+        expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14), // 14 Days
         sameSite: "strict",
         secure: process.env.NODE_ENV === "production",
       });
 
+      await this.serviceInstance.login(userLogin.user.uid);
       res.status(200).json({
         message: "login successfully",
       });
@@ -114,6 +145,7 @@ class AuthController {
   // The oobCode is extracted and the email is verified
   // The uid is sent to your API to update the status
 
+  // Verify email
   public async verifyEmail(req: Request, res: Response): Promise<void> {
     try {
       const { uid } = req.body;
@@ -130,7 +162,7 @@ class AuthController {
         return;
       }
 
-      if (existingUser.emailVerified) {
+      if (existingUser.emailVerified === true) {
         res.status(200).json({ message: "Email is already verified" });
         return;
       }
