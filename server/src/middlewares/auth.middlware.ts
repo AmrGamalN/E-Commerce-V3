@@ -17,7 +17,6 @@ class AuthenticationMiddleware {
     try {
       // prettier-ignore
       const decryptedToken = Buffer.from(req.cookies?.AuthToken, "base64").toString("utf-8");
-      console.log(decryptedToken);
       if (!decryptedToken) {
         res.status(401).json({ message: "Unauthorized: No token provided." });
         return;
@@ -27,14 +26,16 @@ class AuthenticationMiddleware {
         res.status(401).json({ message: "Invalid Auth Token." });
         return;
       }
-      req.user = user;
+
+      const role = await User.findOne({ userId: user?.user_id }, { role: 1 });
+      req.user = { user, role };
       next();
     } catch (error) {
       res.status(500).json({ message: "Authentication error." });
     }
   }
 
-  public static async allowTo(
+  public static async authorization(
     req: Request,
     res: Response,
     next: NextFunction
@@ -47,23 +48,14 @@ class AuthenticationMiddleware {
         "CALL_CENTER",
       ];
       const userid = req.user?.user_id;
+      const role = req.user?.role;
 
       if (!userid) {
         res.status(401).json({ message: "Unauthorized: Missing user ID" });
         return;
       }
 
-      const user = await User.findOne(
-        { userId: userid },
-        { userId: 1, role: 1, email: 1, _id: 0 }
-      );
-
-      if (!user) {
-        res.status(404).json({ message: "User not found" });
-        return;
-      }
-
-      if (!allowedRoles.includes(String(user?.role))) {
+      if (!allowedRoles.includes(String(role))) {
         res.status(403).json({ message: "Forbidden: Access denied" });
       }
       next();
@@ -71,6 +63,20 @@ class AuthenticationMiddleware {
       res.status(500).json({ message: "Internal server error" });
     }
   }
-}
 
+  public static allowTo(role: string) {
+    return (req: Request, res: Response, next: NextFunction) => {
+      const userRole = req.user?.role;
+      if (!userRole) {
+        res.status(401).json({ error: "Unauthorized: No user role found" });
+        return;
+      }
+      if (userRole !== role) {
+        res.status(403).json({ error: "Forbidden: Access denied" });
+        return;
+      }
+      next();
+    };
+  }
+}
 export default AuthenticationMiddleware;
