@@ -1,8 +1,9 @@
 import mongoose, { model, Schema } from "mongoose";
 import { ItemDtoType } from "../../dto/item.dto";
 
-const CONDITION = ["NEW", "OLD", "USE"];
-const STATE = ["UNDER_REVIEW", "PUBLISHED", "SOLD", "REJECT"];
+
+const CONDITION = ["NEW", "OLD", "USED"];
+const STATE = ["UNDER_REVIEW", "APPROVED", "PUBLISHED", "SOLD", "REJECT"];
 
 const ItemSchema: Schema = new Schema(
   {

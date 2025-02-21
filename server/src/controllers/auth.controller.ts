@@ -52,27 +52,8 @@ class AuthController {
   public async registerUser(req: Request, res: Response): Promise<void> {
     try {
       const { email, password, role } = req.body;
-      const files: string[] = req.files
-        ? Object.values(req.files).flatMap((fileArray) =>
-            (fileArray as Express.Multer.File[]).map((file) => file.path)
-          )
-        : [];
-
-      const parser = {
-        name: req.body.name,
-        mobile: req.body.mobile,
-        gender: req.body.gender,
-        business: Boolean(req.body.business == "true" ? true : false),
-        personal: Boolean(req.body.personal == "true" ? true : false),
-        coverImage: files[1] || "",
-        paymentOptions: req.body.paymentOptions.split(","),
-        description: req.body.description,
-        addressIds: req.body.addressIds.split(","),
-        allowedToShow: req.body.allowedToShow.split(","),
-        profileImage: files[0] || "",
-      };
-
-
+      console.log(req.body);
+      
       let existingUser = null;
       try {
         existingUser = await auth.getUserByEmail(email);
@@ -84,13 +65,13 @@ class AuthController {
           return;
         }
       }
-      
+
       if (existingUser) {
         res.status(409).json({ message: "Email already exists." });
         return;
       }
 
-      await this.serviceInstance.registerUser(email, password, role, parser);
+      await this.serviceInstance.registerUser(email, password, role, req.body);
       res.status(201).json({
         message: "User registered successfully. Please verify your email.",
       });
