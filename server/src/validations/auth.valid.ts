@@ -1,12 +1,12 @@
 import { body, check } from "express-validator";
 import { checkArray } from "./general.valid";
 
-export const loginValid = [
+export const loginValidator = [
   body("email").isEmail().withMessage("PLEASE ENTER A VALID EMAIL"),
   body("password").notEmpty().withMessage("PASSWORD IS REQUIRED"),
 ];
 
-export const registerValid = [
+export const registerValidator = [
   check("email").trim().isEmail().withMessage("PLEASE ENTER A VALID EMAIL"),
 
   check("password")

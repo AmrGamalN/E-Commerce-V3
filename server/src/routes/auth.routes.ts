@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
 import AuthController from "../controllers/auth.controller";
-import { loginValid, registerValid } from "../validations/auth.valid";
-import { validateResult } from "../validations/general.valid";
+import { loginValidator, registerValidator } from "../validations/auth.valid";
+import { resultValidator } from "../validations/general.valid";
 import { uploadFile, upload } from "../middlewares/uploadFile.middleware";
 import { userParser } from "../middlewares/parser.middleware";
 const controller = AuthController.getInstance();
@@ -17,8 +17,8 @@ router.post(
     ])
   ),
   userParser,
-  registerValid,
-  validateResult,
+  registerValidator,
+  resultValidator,
   async (req: Request, res: Response, next: NextFunction) => {
     await controller.registerUser(req, res);
   }
@@ -27,8 +27,8 @@ router.post(
 // Login user
 router.post(
   "/login",
-  loginValid,
-  validateResult,
+  loginValidator,
+  resultValidator,
   async (req: Request, res: Response) => {
     await controller.login(req, res);
   }

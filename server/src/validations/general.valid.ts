@@ -1,7 +1,7 @@
 import { check, validationResult } from "express-validator";
 import { Request, Response, NextFunction } from "express";
 
-export const validateMongoId = [
+export const mongoIdValidator = [
   check("id")
     .trim()
     .notEmpty()
@@ -27,7 +27,7 @@ export const checkArray = (field: string, errorMessage: string) => {
   });
 };
 
-export const validateResult = (
+export const resultValidator = (
   req: Request,
   res: Response,
   next: NextFunction
