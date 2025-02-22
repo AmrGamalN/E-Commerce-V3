@@ -1,7 +1,7 @@
 import { check } from "express-validator";
 import { checkArray } from "./general.valid";
 
-export const itemValid = [
+export const itemValidator = [
   check("category")
     .trim()
     .notEmpty()

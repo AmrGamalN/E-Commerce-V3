@@ -2,8 +2,8 @@ import express, { Request, Response } from "express";
 import ItemController from "../controllers/item.controller";
 import AuthenticationMiddleware from "../middlewares/auth.middleware";
 import { itemParser } from "../middlewares/parser.middleware";
-import { itemValid } from "../validations/item.valid";
-import { validateResult, validateMongoId } from "../validations/general.valid";
+import { itemValidator } from "../validations/item.valid";
+import { resultValidator, mongoIdValidator } from "../validations/general.valid";
 import { uploadFile, upload } from "../middlewares/uploadFile.middleware";
 const controller = ItemController.getInstance();
 const router = express.Router();
@@ -21,8 +21,8 @@ router.post(
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   uploadFile(upload.fields([{ maxCount: 5, name: "itemImages" }])),
   itemParser,
-  itemValid,
-  validateResult,
+  itemValidator,
+  resultValidator,
   async (req: Request, res: Response) => {
     await controller.addItem(req, res);
   }
@@ -36,9 +36,9 @@ router.put(
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   uploadFile(upload.fields([{ maxCount: 5, name: "itemImages" }])),
   itemParser,
-  itemValid,
-  validateMongoId,
-  validateResult,
+  itemValidator,
+  mongoIdValidator,
+  resultValidator,
   async (req: Request, res: Response) => {
     await controller.updateItem(req, res);
   }
@@ -61,8 +61,8 @@ router.delete(
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.authorization,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
-  validateMongoId,
-  validateResult,
+  mongoIdValidator,
+  resultValidator,
   async (req: Request, res: Response) => {
     await controller.deleteItem(req, res);
   }
@@ -74,8 +74,8 @@ router.get(
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.authorization,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
-  validateMongoId,
-  validateResult,
+  mongoIdValidator,
+  resultValidator,
   async (req: Request, res: Response) => {
     await controller.getItem(req, res);
   }
