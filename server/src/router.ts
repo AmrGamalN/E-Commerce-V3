@@ -2,6 +2,7 @@ import { Request, Response, Router } from "express";
 import AuthRouters from "./routes/auth.routes";
 import ItemRouters from "./routes/item.routes";
 import CategoryRouters from "./routes/category.routes";
+import addressRouters from "./routes/address.routes";
 const router = Router();
 
 // Health Check
@@ -14,9 +15,9 @@ router.get("/health-check", (req: Request, res: Response) => {
 router.use("/auth", AuthRouters);
 router.use("/item", ItemRouters);
 router.use("/category", CategoryRouters);
+router.use("/address", addressRouters);
 
 // router.use("/user");
-// router.use("/address");
 // router.use("/order");
 // router.use("/cart");
 
