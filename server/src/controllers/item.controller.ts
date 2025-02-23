@@ -80,12 +80,14 @@ class ItemController {
         res.status(200).json({ message: "Not found Items", data: [] });
         return;
       }
+      const totalPages = Math.ceil(count / 10);
+      const remainPages = totalPages - Number(page);
       res.status(200).json({
         paginationInfo: {
-          currentPage: page,
-          totalPages: Math.ceil(count / 10),
-          totalItems: count,
-          remainPages: count - 10 * Number(page),
+          currentPage: Number(page),
+          totalPages: totalPages,
+          totalReviews: count,
+          remainPages: remainPages > 0 ? remainPages : 0,
           itemsPerPage: 10,
         },
         message: "Items get Successfully",

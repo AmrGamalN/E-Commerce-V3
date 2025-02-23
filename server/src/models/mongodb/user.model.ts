@@ -70,9 +70,19 @@ const userSchema: Schema = new Schema(
       type: [String],
       default: [],
     },
-    avgRating: {
-      type: Number,
-      default: 0,
+    rate: {
+      avgRating: {
+        type: Number,
+        default: 0,
+      },
+      rating: {
+        type: [Number],
+        default: [0, 0, 0, 0, 0], // ["bad", "average", "good", "very good", "excellent"]
+      },
+      totalReviews: {
+        type: Number,
+        default: 0,
+      },
     },
     description: {
       type: String,

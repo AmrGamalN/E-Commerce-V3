@@ -51,8 +51,6 @@ class AuthController {
   public async registerUser(req: Request, res: Response): Promise<void> {
     try {
       const { email, password, role } = req.body;
-      console.log(req.body);
-      
       let existingUser = null;
       try {
         existingUser = await auth.getUserByEmail(email);
@@ -142,13 +140,18 @@ class AuthController {
         return;
       }
 
-      if (existingUser.emailVerified === true) {
+      if (existingUser.emailVerified) {
         res.status(200).json({ message: "Email is already verified" });
         return;
       }
 
-      await this.serviceInstance.verifyEmail(String(uid));
-      res.status(200).json({ message: "Email verified successfully." });
+      try {
+        await this.serviceInstance.verifyEmail(String(uid));
+        res.status(200).json({ message: "Email verified successfully." });
+        return;
+      } catch (error) {
+        res.status(500).json({ error: "Email verification failed" });
+      }
     } catch (error) {
       AuthController.handleError(res, "Internal server error.", error);
     }

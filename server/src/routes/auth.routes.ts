@@ -1,7 +1,10 @@
 import express, { Request, Response, NextFunction } from "express";
 import AuthController from "../controllers/auth.controller";
-import { loginValidator, registerValidator } from "../validations/auth.valid";
-import { resultValidator } from "../validations/general.valid";
+import {
+  loginValidator,
+  registerValidator,
+} from "../validations/auth.validator";
+import { resultValidator } from "../validations/general.validator";
 import { uploadFile, upload } from "../middlewares/uploadFile.middleware";
 import { userParser } from "../middlewares/parser.middleware";
 const controller = AuthController.getInstance();

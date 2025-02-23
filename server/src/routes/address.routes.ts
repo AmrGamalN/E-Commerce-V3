@@ -1,11 +1,11 @@
 import express, { Request, Response } from "express";
 import AddressController from "../controllers/address.controller";
 import AuthenticationMiddleware from "../middlewares/auth.middleware";
-import { addressValidator } from "../validations/address.valid";
+import { addressValidator } from "../validations/address.validator";
 import {
   resultValidator,
-  mongoIdValidator,
-} from "../validations/general.valid";
+  idValidator,
+} from "../validations/general.validator";
 import { uploadFile, upload } from "../middlewares/uploadFile.middleware";
 const controller = AddressController.getInstance();
 const router = express.Router();
@@ -41,7 +41,7 @@ router.put(
   AuthenticationMiddleware.authorization,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   addressValidator,
-  mongoIdValidator,
+  idValidator,
   resultValidator,
   async (req: Request, res: Response) => {
     await controller.updateAddress(req, res);
@@ -54,7 +54,7 @@ router.delete(
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.authorization,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
-  mongoIdValidator,
+  idValidator,
   resultValidator,
   async (req: Request, res: Response) => {
     await controller.deleteAddress(req, res);
@@ -67,7 +67,7 @@ router.get(
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.authorization,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
-  mongoIdValidator,
+  idValidator,
   resultValidator,
   async (req: Request, res: Response) => {
     await controller.getAddress(req, res);
