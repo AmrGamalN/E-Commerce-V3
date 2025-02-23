@@ -16,7 +16,11 @@ export const UserDto = z.object({
   numOfPostsInADay: z.number().default(0),
   followers: z.number().default(0),
   following: z.number().default(0),
-  avgRating: z.number().default(0),
+  rate: z.object({
+    avgRating: z.number(),
+    rating: z.array(z.number()).default([0, 0, 0, 0, 0]),
+    totalReviews: z.number(),
+  }),
   paymentOptions: z.array(z.string()).default([]),
   addressIds: z.array(z.string()).default([]),
   allowedToShow: z.array(z.string()).default([]),

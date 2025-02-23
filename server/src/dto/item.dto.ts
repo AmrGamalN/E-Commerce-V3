@@ -36,6 +36,12 @@ export const ItemDto = z.object({
   isFirstItem: z.boolean().default(true),
   isHighlighted: z.boolean().default(false),
   promotion: z.boolean().default(false),
+  reviewId: z.array(z.string()).default([]),
+  rate: z.object({
+    avgRating: z.number(),
+    rating: z.array(z.number()).default([0, 0, 0, 0, 0]),
+    totalReviews: z.number(),
+  }),
 });
 
 export const ItemAddDto = z.object({

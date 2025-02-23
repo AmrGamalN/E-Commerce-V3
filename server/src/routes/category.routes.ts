@@ -3,11 +3,11 @@ import AuthenticationMiddleware from "../middlewares/auth.middleware";
 import {
   categoryValidator,
   subCategoryValidator,
-} from "../validations/category.valid";
+} from "../validations/category.validator";
 import {
   resultValidator,
-  mongoIdValidator,
-} from "../validations/general.valid";
+  idValidator,
+} from "../validations/general.validator";
 import CategoryController from "../controllers/category.controller";
 const controller = CategoryController.getInstance();
 const router = express.Router();
@@ -55,7 +55,7 @@ router.delete(
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.authorization,
   AuthenticationMiddleware.allowTo(["ADMIN", "MANAGER"]),
-  mongoIdValidator,
+  idValidator,
   resultValidator,
   async (req: Request, res: Response) => {
     await controller.deleteCategory(req, res);
@@ -68,7 +68,7 @@ router.get(
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.authorization,
   AuthenticationMiddleware.allowTo(["ADMIN", "MANAGER"]),
-  mongoIdValidator,
+  idValidator,
   resultValidator,
   async (req: Request, res: Response) => {
     await controller.getCategory(req, res);

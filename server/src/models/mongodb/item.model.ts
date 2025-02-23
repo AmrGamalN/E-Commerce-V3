@@ -55,6 +55,24 @@ const ItemSchema: Schema = new Schema(
     isFirstItem: { type: Boolean, default: false },
     isHighlighted: { type: Boolean, default: false },
     promotion: { type: Boolean, default: false },
+    reviewId: {
+      type: [String],
+      default: [],
+    },
+    rate: {
+      avgRating: {
+        type: Number,
+        default: 0,
+      },
+      rating: {
+        type: [Number],
+        default: [0, 0, 0, 0, 0], // ["bad", "average", "good", "very good", "excellent"]
+      },
+      totalReviews: {
+        type: Number,
+        default: 0,
+      },
+    },
   },
   { timestamps: true }
 );
