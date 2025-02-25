@@ -30,8 +30,8 @@ router.post(
 // Login user
 router.post(
   "/login",
-  loginValidator,
-  resultValidator,
+  // loginValidator,
+  // resultValidator,
   async (req: Request, res: Response) => {
     await controller.login(req, res);
   }

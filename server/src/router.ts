@@ -4,6 +4,7 @@ import ItemRouters from "./routes/item.routes";
 import CategoryRouters from "./routes/category.routes";
 import addressRouters from "./routes/address.routes";
 import reviewRouters from "./routes/review.routes";
+import notificationRouters from "./routes/notification.routes";
 import AuthenticationMiddleware from "./middlewares/auth.middleware";
 const router = Router();
 
@@ -25,6 +26,7 @@ router.use("/item", ItemRouters);
 router.use("/category", CategoryRouters);
 router.use("/address", addressRouters);
 router.use("/review", reviewRouters);
+router.use("/notification", notificationRouters);
 
 // router.use("/user");
 // router.use("/order");

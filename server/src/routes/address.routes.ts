@@ -6,7 +6,6 @@ import {
   resultValidator,
   idValidator,
 } from "../validations/general.validator";
-import { uploadFile, upload } from "../middlewares/uploadFile.middleware";
 const controller = AddressController.getInstance();
 const router = express.Router();
 

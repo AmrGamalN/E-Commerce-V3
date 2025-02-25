@@ -36,6 +36,7 @@ export const UserDto = z.object({
     )
     .default([]),
   dateOfJoining: z.date().default(new Date()),
+  fcmTokens: z.array(z.string()).default([]),
 });
 
 export type UserDtoType = z.infer<typeof UserDto>;
