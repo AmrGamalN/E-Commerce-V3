@@ -128,6 +128,10 @@ const userSchema: Schema = new Schema(
         },
       },
     ],
+    fcmTokens: {
+      type: [String],
+      default: [],
+    },
   },
   {
     timestamps: true,

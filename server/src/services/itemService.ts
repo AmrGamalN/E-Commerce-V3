@@ -44,12 +44,13 @@ class ItemService {
       if (retrievedItem?.userId == null) {
         throw new Error("Item not found");
       }
-      const parsed = ItemDto.safeParse(retrievedItem);
 
+      const { _id, ...itemData } = retrievedItem.toObject();
+      const parsed = ItemDto.safeParse(retrievedItem);
       if (!parsed.success) {
         throw new Error("Invalid item data");
       }
-      const item = { _id: retrievedItem?._id, ...parsed.data };
+      const item = { _id, ...parsed.data };
       return item;
     } catch (error) {
       throw new Error(

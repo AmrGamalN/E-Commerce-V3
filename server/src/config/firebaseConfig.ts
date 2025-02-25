@@ -1,6 +1,7 @@
 import admin from "firebase-admin";
 import { initializeApp } from "firebase/app";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { getMessaging, getToken, onMessage } from "firebase/messaging";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -17,4 +18,7 @@ const serviceClient = JSON.parse(process.env.FIREBASE_CONFIG_CLIENT as string);
 const app = initializeApp(serviceClient);
 const authentication = getAuth(app);
 
-export { auth, authentication, signInWithEmailAndPassword };
+// Notification
+const messaging = admin.messaging();
+
+export { auth, authentication, signInWithEmailAndPassword, messaging };

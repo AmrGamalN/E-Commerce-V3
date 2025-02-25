@@ -3,6 +3,7 @@ import { ItemDtoType } from "../../dto/item.dto";
 
 const CONDITION = ["NEW", "OLD", "USED"];
 const STATE = ["UNDER_REVIEW", "APPROVED", "PUBLISHED", "SOLD", "REJECT"];
+const COMMUNICATION = ["PHONE", "CHAT"];
 
 const ItemSchema: Schema = new Schema(
   {
@@ -43,6 +44,8 @@ const ItemSchema: Schema = new Schema(
       default: [],
     },
     location: { type: String, required: true },
+    categoryId: { type: String, optional: true },
+    subCategoryId: { type: String, optional: true },
     phone: { type: String, optional: true },
     type: { type: String, optional: true },
     size: { type: String, optional: true },

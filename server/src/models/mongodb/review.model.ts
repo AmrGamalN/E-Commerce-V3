@@ -9,7 +9,7 @@ const reviewSchema: Schema = new Schema({
   buyerId: { type: String, required: true },
   sellerId: { type: String, required: true },
   itemId: { type: String, required: true },
-});
+}, {timestamps:true});
 
 const Address = model<ReviewDtoType>("reviews", reviewSchema);
 export default Address;

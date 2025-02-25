@@ -15,7 +15,7 @@ const addressSchema: Schema = new Schema({
   phone: { type: String, required: true },
   type: { type: String, required: true },
   isDefault: { type: Boolean, required: true, default: true },
-});
+} ,{timestamps:true});
 
 const Address = model<AddressDtoType>("addresses", addressSchema);
 export default Address;

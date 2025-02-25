@@ -3,6 +3,7 @@ import {
   auth,
   authentication,
   signInWithEmailAndPassword,
+  // requestForToken,
 } from "../config/firebaseConfig";
 import { ZodError } from "zod";
 import AuthService from "../services/authService";
@@ -103,15 +104,26 @@ class AuthController {
       ).toString("base64");
 
       res.cookie("AuthToken", tokenCrypt, {
-        httpOnly: false,
-        expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14), // 14 Days
-        sameSite: "strict",
-        secure: process.env.NODE_ENV === "production",
-      });
+        // httpOnly: true,
+        // // expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14), // 14 Days
+        // sameSite: "none", //lax //strict
+        // // secure: process.env.NODE_ENV === "production",
+        // secure: false,
 
+        httpOnly: true,
+        secure: false,
+        sameSite: "lax",
+        domain: "localhost",
+
+        // httpOnly: true,
+        // secure: true,
+        // sameSite: "none",
+        // domain: "192.168.1.4",
+      });
       await this.serviceInstance.login(userLogin.user.uid);
       res.status(200).json({
         message: "login successfully",
+        data: userLogin.user.uid,
       });
     } catch (error) {
       AuthController.handleError(res, "Failed to login user", error);
