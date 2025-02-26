@@ -15,6 +15,7 @@ const router = express.Router();
 // Count reviews to specific item by sellerId and itemId [ Seller ]
 router.get(
   "/count",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   async (req: Request, res: Response) => {
@@ -26,6 +27,7 @@ router.get(
 // Allow both userId and itemId as optional parameters
 router.get(
   "/average-rate",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   async (req: Request, res: Response) => {
@@ -36,6 +38,7 @@ router.get(
 // Add review [ Buyer ]
 router.post(
   "/add/:id",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   reviewParser,
@@ -50,6 +53,7 @@ router.post(
 // Update review by buyerId [ Buyer ]
 router.put(
   "/update/:id",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   reviewParser,
@@ -65,6 +69,7 @@ router.put(
 // Delete review by buyerId  [ Buyer ]
 router.delete(
   "/delete",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   idValidator,
@@ -77,6 +82,7 @@ router.delete(
 // Get Review by reviewId and userId [ Seller ]
 router.get(
   "/get",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
   idValidator,
@@ -89,6 +95,7 @@ router.get(
 // Get all review by reviewId and sellerId [ Seller ]
 router.get(
   "/get-all",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   async (req: Request, res: Response) => {

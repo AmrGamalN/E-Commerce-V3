@@ -1,11 +1,13 @@
 import { NextFunction, Request, Response } from "express";
 import { auth } from "../config/firebaseConfig";
 import User from "../models/mongodb/user.model";
+import axios from "axios";
 
 // Used to add user in request to handle in typescript
 declare module "express-serve-static-core" {
   interface Request {
     user?: any;
+    accessToken?: any;
   }
 }
 class AuthenticationMiddleware {
@@ -15,7 +17,7 @@ class AuthenticationMiddleware {
     next: NextFunction
   ): Promise<void> {
     try {
-      let accessToken = req.headers.authorization;
+      const accessToken = req.accessToken;
       if (!accessToken) {
         res.status(401).json({ message: "Unauthorized: No token provided." });
         return;
@@ -31,7 +33,7 @@ class AuthenticationMiddleware {
         { userId: decoded?.user_id },
         { role: 1, _id: 0 }
       );
-      req.user = { user_id: decoded.user_id, role };
+      req.user = { user_id: decoded.user_id, role: role, email: decoded.email };
       next();
     } catch (error: any) {
       if (error.code === "auth/id-token-expired") {
@@ -87,6 +89,40 @@ class AuthenticationMiddleware {
       }
       next();
     };
+  }
+
+  // refresh token
+  public static async refreshToken(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const refreshToken = req.cookies?.RefreshToken;
+      if (!refreshToken) {
+        res.status(401).json({ message: "Unauthorized: No refresh token." });
+        return;
+      }
+
+      // Create new access token
+      const response = await axios.post(
+        `https://securetoken.googleapis.com/v1/token?key=${process.env.FIREBASE_API_KEY}`,
+        {
+          grant_type: "refresh_token",
+          refresh_token: refreshToken,
+        }
+      );
+
+      if (!response) {
+        res.status(403).json({ message: "Invalid or expired refresh token." });
+        return;
+      }
+
+      req.accessToken = response.data.id_token;
+      next();
+    } catch (error) {
+      res.status(500).json({ message: "Invalid or expired refresh token." });
+    }
   }
 }
 export default AuthenticationMiddleware;

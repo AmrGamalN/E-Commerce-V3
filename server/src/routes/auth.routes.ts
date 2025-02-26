@@ -5,7 +5,7 @@ import {
   registerValidator,
 } from "../validations/auth.validator";
 import { uploadFile, upload } from "../middlewares/uploadFile.middleware";
-import { userParser } from "../middlewares/parser.middleware";
+import { userRegisterParser } from "../middlewares/parser.middleware";
 import { validatorBody } from "../middlewares/zod.validator.middleware";
 import { expressValidator } from "../middlewares/express.validator.middleware";
 import { RegisterDto, LoginDto } from "../dto/auth.dto";
@@ -22,7 +22,7 @@ router.post(
       { maxCount: 1, name: "coverImage" },
     ])
   ),
-  userParser,
+  userRegisterParser,
   registerValidator,
   expressValidator,
   validatorBody(RegisterDto),
@@ -50,6 +50,7 @@ router.get("/verify-email", async (req: Request, res: Response) => {
 // refresh token
 router.post(
   "/refresh-token",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
   async (req: Request, res: Response) => {
@@ -60,6 +61,7 @@ router.post(
 // Logout
 router.post(
   "/Logout",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
   async (req: Request, res: Response) => {

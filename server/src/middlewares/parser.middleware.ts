@@ -1,6 +1,10 @@
 import express, { Request, Response, NextFunction } from "express";
 
-export const userParser = (req: Request, res: Response, next: NextFunction) => {
+export const userRegisterParser = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   const files: string[] = req.files
     ? Object.values(req.files).flatMap((fileArray) =>
         (fileArray as Express.Multer.File[]).map((file) => file.path)
@@ -11,6 +15,32 @@ export const userParser = (req: Request, res: Response, next: NextFunction) => {
   req.body.allowedToShow = req.body.allowedToShow.split(",");
   req.body.business = req.body.business === "true";
   req.body.personal = req.body.personal === "true";
+  req.body.coverImage = files[1];
+  req.body.profileImage = files[0];
+  next();
+};
+
+export const userUpdateParser = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const files: string[] = req.files
+    ? Object.values(req.files).flatMap((fileArray) =>
+        (fileArray as Express.Multer.File[]).map((file) => file.path)
+      )
+    : [];
+  if (req.body.paymentOptions !== undefined) {
+    req.body.paymentOptions = req.body.paymentOptions.split(",");
+  }
+
+  if (req.body.addressIds !== undefined) {
+    req.body.addressIds = req.body.addressIds.split(",");
+  }
+
+  if (req.body.allowedToShow !== undefined) {
+    req.body.allowedToShow = req.body.allowedToShow.split(",");
+  }
   req.body.coverImage = files[1];
   req.body.profileImage = files[0];
   next();

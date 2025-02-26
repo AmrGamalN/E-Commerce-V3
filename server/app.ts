@@ -2,7 +2,7 @@ import connectToMongoDB from "./src/config/mongooseConfig";
 import router from "./src/router";
 import { auth } from "./src/config/firebaseConfig";
 import { client } from "./src/config/redisConfig";
-import swaggerOptions from "./src/swaggerConfig";
+import swaggerOptions from "./src/config/swaggerConfig";
 import swaggerJsdoc from "swagger-jsdoc";
 import swaggerUi from "swagger-ui-express";
 import express, { Application } from "express";

@@ -42,7 +42,12 @@ class AuthService {
 
       // Store user details in caching and send verification to use email
       const verificationLink = await auth.generateEmailVerificationLink(email);
-      await sendVerificationEmail(email, verificationLink);
+      await sendVerificationEmail(
+        email,
+        verificationLink,
+        "Verify Your Email",
+        "Please verify your email by clicking the following link:"
+      );
       await client.setEx(
         `userId:${userRegister.uid}`,
         3600, // After 1 hours delete user auto from caching

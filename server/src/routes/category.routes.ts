@@ -15,6 +15,7 @@ const router = express.Router();
 // Count categories
 router.get(
   "/count",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["ADMIN", "MANAGER"]),
   async (req: Request, res: Response) => {
@@ -25,6 +26,7 @@ router.get(
 // Add category
 router.post(
   "/add",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["ADMIN", "MANAGER"]),
   [...categoryValidator, ...subCategoryValidator],
@@ -38,6 +40,7 @@ router.post(
 // Update category
 router.put(
   "/update/:id",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["ADMIN", "MANAGER"]),
   [...categoryValidator, ...subCategoryValidator],
@@ -52,6 +55,7 @@ router.put(
 // Delete category
 router.delete(
   "/delete/:id",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["ADMIN", "MANAGER"]),
   idValidator,
@@ -64,6 +68,7 @@ router.delete(
 // Get category
 router.get(
   "/get/:id",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["ADMIN", "MANAGER"]),
   idValidator,
@@ -76,6 +81,7 @@ router.get(
 // Get all categories
 router.get(
   "/get-all",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["ADMIN", "MANAGER"]),
   async (req: Request, res: Response) => {
