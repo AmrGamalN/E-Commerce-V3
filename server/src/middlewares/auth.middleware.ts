@@ -15,25 +15,31 @@ class AuthenticationMiddleware {
     next: NextFunction
   ): Promise<void> {
     try {
-      // prettier-ignore
-      const decryptedToken = Buffer.from(req.cookies?.AuthToken, "base64").toString("utf-8");
-      if (!decryptedToken) {
+      let accessToken = req.headers.authorization;
+      if (!accessToken) {
         res.status(401).json({ message: "Unauthorized: No token provided." });
         return;
       }
-      const user = await auth.verifyIdToken(decryptedToken);
-      if (!user) {
+
+      const decoded = await auth.verifyIdToken(accessToken);
+      if (!decoded) {
         res.status(401).json({ message: "Invalid Auth Token." });
         return;
       }
 
       const role = await User.findOne(
-        { userId: user?.user_id },
+        { userId: decoded?.user_id },
         { role: 1, _id: 0 }
       );
-      req.user = { user_id: user.user_id, role };
+      req.user = { user_id: decoded.user_id, role };
       next();
-    } catch (error) {
+    } catch (error: any) {
+      if (error.code === "auth/id-token-expired") {
+        res
+          .status(401)
+          .json({ message: "Token expired. Please refresh your token." });
+        return;
+      }
       res.status(500).json({ message: "Authentication error." });
     }
   }

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const AddressDto = z.object({
+export const AddressAddDto = z.object({
   street: z.string(),
   suite: z.string(),
   houseNumber: z.number(),
@@ -12,4 +12,20 @@ export const AddressDto = z.object({
   isDefault: z.boolean().default(false),
 });
 
+export const AddressDto = z.object({
+  userId: z.string(),
+  street: z.string(),
+  suite: z.string(),
+  houseNumber: z.number(),
+  city: z.string(),
+  state: z.string(),
+  country: z.string(),
+  phone: z.string(),
+  type: z.string(),
+  isDefault: z.boolean().default(false),
+});
+
+
+
+export type AddressAddDtoType = z.infer<typeof AddressAddDto>;
 export type AddressDtoType = z.infer<typeof AddressDto>;

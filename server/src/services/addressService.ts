@@ -1,5 +1,10 @@
 import Address from "../models/mongodb/address.model";
-import { AddressDtoType, AddressDto } from "../dto/address.dto";
+import {
+  AddressDtoType,
+  AddressDto,
+  AddressAddDtoType,
+  AddressAddDto,
+} from "../dto/address.dto";
 
 class AddressService {
   private static Instance: AddressService;
@@ -13,11 +18,11 @@ class AddressService {
 
   // Add address
   async addAddress(
-    data: AddressDtoType,
+    data: AddressAddDtoType,
     userId: string
-  ): Promise<AddressDtoType> {
+  ): Promise<AddressAddDtoType> {
     try {
-      const parsed = AddressDto.safeParse(data);
+      const parsed = AddressAddDto.safeParse(data);
       if (!parsed.success) {
         throw new Error("Invalid address data");
       }
@@ -42,12 +47,13 @@ class AddressService {
       if (retrievedAddress == null) {
         throw new Error("Address not found");
       }
-      const parsed = AddressDto.safeParse(retrievedAddress);
+      const { _id, ...addressData } = retrievedAddress.toObject();
+      const parsed = AddressDto.safeParse(addressData);
 
       if (!parsed.success) {
         throw new Error("Invalid address data");
       }
-      const address = { _id: retrievedAddress?._id, ...parsed.data };
+      const address = { _id, ...parsed.data };
       return address;
     } catch (error) {
       throw new Error(
@@ -83,10 +89,10 @@ class AddressService {
   async updateAddress(
     addressId: string,
     userId: string,
-    data: AddressDtoType
-  ): Promise<AddressDtoType | null> {
+    data: AddressAddDtoType
+  ): Promise<AddressAddDtoType | null> {
     try {
-      const parsed = AddressDto.safeParse(data);
+      const parsed = AddressAddDto.safeParse(data);
       if (!parsed.success) {
         throw new Error("Invalid address data");
       }

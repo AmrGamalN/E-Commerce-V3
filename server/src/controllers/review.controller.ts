@@ -46,11 +46,11 @@ class ReviewController {
   async addReview(req: Request, res: Response): Promise<void> {
     try {
       const buyerId = req.user?.user_id;
-      const { itemId } = req.params;
+      const { id } = req.params;
       const retrievedReview = await this.serviceInstance.addReview(
         req.body,
         buyerId,
-        String(itemId)
+        String(id)
       );
       if (!retrievedReview) {
         res.status(400).json({ message: "Failed to add review" });
@@ -168,10 +168,10 @@ class ReviewController {
    */
   async updateReview(req: Request, res: Response): Promise<void> {
     try {
-      const { reviewId } = req.params;
+      const { id } = req.params;
       const buyerId = req.user?.user_id;
       const retrievedReview = await this.serviceInstance.updateReview(
-        String(reviewId),
+        String(id),
         buyerId,
         req.body
       );

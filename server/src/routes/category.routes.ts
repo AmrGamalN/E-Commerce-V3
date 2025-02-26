@@ -4,10 +4,10 @@ import {
   categoryValidator,
   subCategoryValidator,
 } from "../validations/category.validator";
-import {
-  resultValidator,
-  idValidator,
-} from "../validations/general.validator";
+import { idValidator } from "../validations/general.validator";
+import { expressValidator } from "../middlewares/express.validator.middleware";
+import { validatorBody } from "../middlewares/zod.validator.middleware";
+import { CategoryDto } from "../dto/category.dto";
 import CategoryController from "../controllers/category.controller";
 const controller = CategoryController.getInstance();
 const router = express.Router();
@@ -16,7 +16,6 @@ const router = express.Router();
 router.get(
   "/count",
   AuthenticationMiddleware.verifyIdToken,
-  AuthenticationMiddleware.authorization,
   AuthenticationMiddleware.allowTo(["ADMIN", "MANAGER"]),
   async (req: Request, res: Response) => {
     await controller.countCategories(req, res);
@@ -27,10 +26,10 @@ router.get(
 router.post(
   "/add",
   AuthenticationMiddleware.verifyIdToken,
-  AuthenticationMiddleware.authorization,
   AuthenticationMiddleware.allowTo(["ADMIN", "MANAGER"]),
   [...categoryValidator, ...subCategoryValidator],
-  resultValidator,
+  expressValidator,
+  validatorBody(CategoryDto),
   async (req: Request, res: Response) => {
     await controller.addCategory(req, res);
   }
@@ -40,10 +39,11 @@ router.post(
 router.put(
   "/update/:id",
   AuthenticationMiddleware.verifyIdToken,
-  AuthenticationMiddleware.authorization,
   AuthenticationMiddleware.allowTo(["ADMIN", "MANAGER"]),
   [...categoryValidator, ...subCategoryValidator],
-  resultValidator,
+  idValidator,
+  expressValidator,
+  validatorBody(CategoryDto),
   async (req: Request, res: Response) => {
     await controller.updateCategory(req, res);
   }
@@ -53,10 +53,9 @@ router.put(
 router.delete(
   "/delete/:id",
   AuthenticationMiddleware.verifyIdToken,
-  AuthenticationMiddleware.authorization,
   AuthenticationMiddleware.allowTo(["ADMIN", "MANAGER"]),
   idValidator,
-  resultValidator,
+  expressValidator,
   async (req: Request, res: Response) => {
     await controller.deleteCategory(req, res);
   }
@@ -66,10 +65,9 @@ router.delete(
 router.get(
   "/get/:id",
   AuthenticationMiddleware.verifyIdToken,
-  AuthenticationMiddleware.authorization,
   AuthenticationMiddleware.allowTo(["ADMIN", "MANAGER"]),
   idValidator,
-  resultValidator,
+  expressValidator,
   async (req: Request, res: Response) => {
     await controller.getCategory(req, res);
   }
@@ -79,7 +77,6 @@ router.get(
 router.get(
   "/get-all",
   AuthenticationMiddleware.verifyIdToken,
-  AuthenticationMiddleware.authorization,
   AuthenticationMiddleware.allowTo(["ADMIN", "MANAGER"]),
   async (req: Request, res: Response) => {
     await controller.getAllCategory(req, res);

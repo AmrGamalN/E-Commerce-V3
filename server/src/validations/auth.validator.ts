@@ -8,7 +8,6 @@ export const loginValidator = [
 
 export const registerValidator = [
   check("email").trim().isEmail().withMessage("PLEASE ENTER A VALID EMAIL"),
-
   check("password")
     .notEmpty()
     .withMessage("PASSWORD IS REQUIRED")
@@ -22,7 +21,16 @@ export const registerValidator = [
       "PASSWORD MUST BE 10 CHARACTERS, INCLUDE AT LEAST ONE UPPERCASE LETTER, ONE NUMBER, AND ONE SPECIAL CHARACTER"
     ),
 
-  check("name").isString().trim().notEmpty().withMessage("NAME IS REQUIRED"),
+  check("name")
+    .isString()
+    .trim()
+    .notEmpty()
+    .withMessage("NAME IS REQUIRED")
+    .isLength({ min: 1, max: 25 })
+    .withMessage("NAME MUST BE BETWEEN 1 AND 25 CHARACTERS.")
+    .matches(/^[a-zA-Z]+$/)
+    .withMessage("MUST CONTAIN ONLY LETTERS"),
+
   check("gender")
     .isString()
     .trim()
@@ -31,15 +39,34 @@ export const registerValidator = [
     .matches(/^(male|female)$/)
     .withMessage("GENDER MUST BE EITHER 'MALE' OR 'FEMALE'"),
 
-  check("business").isBoolean().withMessage("BUSINESS MUST BE TRUE OR FALSE"),
-  check("personal").isBoolean().withMessage("PERSONAL MUST BE TRUE OR FALSE"),
+  check("business")
+    .isBoolean()
+    .withMessage("BUSINESS MUST BE TRUE OR FALSE")
+    .toBoolean(),
+
+  check("personal")
+    .isBoolean()
+    .withMessage("PERSONAL MUST BE TRUE OR FALSE")
+    .toBoolean(),
+
   check("profileImage").isString().optional(),
+
   check("coverImage").isString().optional(),
+
   check("paymentOptions")
     .isArray({ min: 1 })
-    .withMessage("PAYMENT OPTIONS ARE REQUIRED"),
+    .withMessage("PAYMENT OPTIONS ARE REQUIRED")
+    .matches(/^[a-zA-Z]+$/)
+    .withMessage("MUST CONTAIN ONLY LETTERS"),
 
-  check("description").optional().trim(),
+  check("description")
+    .optional()
+    .trim()
+    .matches(/^[a-zA-Z]+$/)
+    .withMessage("MUST CONTAIN ONLY LETTERS")
+    .isLength({ min: 1, max: 100 })
+    .withMessage("DESCRIPTION MUST BE BETWEEN 1 AND 100 CHARACTERS."),
+
   check("addressIds")
     .isArray({ min: 1 })
     .withMessage("ADDRESS IDS ARE REQUIRED"),
@@ -47,10 +74,12 @@ export const registerValidator = [
   check("allowedToShow")
     .isArray({ min: 1 })
     .withMessage("ALLOWED TO SHOW IS REQUIRED"),
+
   checkArray(
     "allowedToShow",
     "ALLOWED TO SHOW MUST CONTAIN ONLY ALPHABETICAL CHARACTERS"
   ),
+
   checkArray(
     "paymentOptions",
     "PAYMENT OPTIONS MUST CONTAIN ONLY ALPHABETICAL CHARACTERS"

@@ -3,7 +3,11 @@ import ReviewController from "../controllers/review.controller";
 import AuthenticationMiddleware from "../middlewares/auth.middleware";
 import { reviewParser } from "../middlewares/parser.middleware";
 import { reviewValidator } from "../validations/review.validator";
-import { resultValidator, idValidator } from "../validations/general.validator";
+import { idValidator } from "../validations/general.validator";
+import { expressValidator } from "../middlewares/express.validator.middleware";
+import { validatorBody } from "../middlewares/zod.validator.middleware";
+import { ReviewAddDto } from "../dto/review.dto";
+
 const controller = ReviewController.getInstance();
 const router = express.Router();
 
@@ -13,8 +17,6 @@ router.get(
   "/count",
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
-  idValidator,
-  resultValidator,
   async (req: Request, res: Response) => {
     await controller.countReview(req, res);
   }
@@ -26,8 +28,6 @@ router.get(
   "/average-rate",
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
-  idValidator,
-  resultValidator,
   async (req: Request, res: Response) => {
     await controller.getReviewAverage(req, res);
   }
@@ -35,13 +35,13 @@ router.get(
 
 // Add review [ Buyer ]
 router.post(
-  "/add/:itemId",
+  "/add/:id",
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   reviewParser,
   idValidator,
-  reviewValidator,
-  resultValidator,
+  expressValidator,
+  validatorBody(ReviewAddDto),
   async (req: Request, res: Response) => {
     await controller.addReview(req, res);
   }
@@ -49,13 +49,14 @@ router.post(
 
 // Update review by buyerId [ Buyer ]
 router.put(
-  "/update/:reviewId",
+  "/update/:id",
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   reviewParser,
   reviewValidator,
   idValidator,
-  resultValidator,
+  expressValidator,
+  validatorBody(ReviewAddDto),
   async (req: Request, res: Response) => {
     await controller.updateReview(req, res);
   }
@@ -67,7 +68,7 @@ router.delete(
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   idValidator,
-  resultValidator,
+  expressValidator,
   async (req: Request, res: Response) => {
     await controller.deleteReview(req, res);
   }
@@ -79,7 +80,7 @@ router.get(
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
   idValidator,
-  resultValidator,
+  expressValidator,
   async (req: Request, res: Response) => {
     await controller.getReview(req, res);
   }

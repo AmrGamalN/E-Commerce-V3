@@ -4,9 +4,12 @@ import {
   loginValidator,
   registerValidator,
 } from "../validations/auth.validator";
-import { resultValidator } from "../validations/general.validator";
 import { uploadFile, upload } from "../middlewares/uploadFile.middleware";
 import { userParser } from "../middlewares/parser.middleware";
+import { validatorBody } from "../middlewares/zod.validator.middleware";
+import { expressValidator } from "../middlewares/express.validator.middleware";
+import { RegisterDto, LoginDto } from "../dto/auth.dto";
+import AuthenticationMiddleware from "../middlewares/auth.middleware";
 const controller = AuthController.getInstance();
 const router = express.Router();
 
@@ -21,7 +24,8 @@ router.post(
   ),
   userParser,
   registerValidator,
-  resultValidator,
+  expressValidator,
+  validatorBody(RegisterDto),
   async (req: Request, res: Response, next: NextFunction) => {
     await controller.registerUser(req, res);
   }
@@ -30,8 +34,9 @@ router.post(
 // Login user
 router.post(
   "/login",
-  // loginValidator,
-  // resultValidator,
+  loginValidator,
+  expressValidator,
+  validatorBody(LoginDto),
   async (req: Request, res: Response) => {
     await controller.login(req, res);
   }
@@ -41,5 +46,25 @@ router.post(
 router.get("/verify-email", async (req: Request, res: Response) => {
   await controller.verifyEmail(req, res);
 });
+
+// refresh token
+router.post(
+  "/refresh-token",
+  AuthenticationMiddleware.verifyIdToken,
+  AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
+  async (req: Request, res: Response) => {
+    await controller.refreshToken(req, res);
+  }
+);
+
+// Logout
+router.post(
+  "/Logout",
+  AuthenticationMiddleware.verifyIdToken,
+  AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
+  async (req: Request, res: Response) => {
+    await controller.logOut(req, res);
+  }
+);
 
 export default router;
