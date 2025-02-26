@@ -3,10 +3,10 @@ import ItemController from "../controllers/item.controller";
 import AuthenticationMiddleware from "../middlewares/auth.middleware";
 import { itemParser } from "../middlewares/parser.middleware";
 import { itemValidator } from "../validations/item.validator";
-import {
-  resultValidator,
-  idValidator,
-} from "../validations/general.validator";
+import { idValidator } from "../validations/general.validator";
+import { expressValidator } from "../middlewares/express.validator.middleware";
+import { validatorBody } from "../middlewares/zod.validator.middleware";
+import { ItemAddDto } from "../dto/item.dto";
 import { uploadFile, upload } from "../middlewares/uploadFile.middleware";
 const controller = ItemController.getInstance();
 const router = express.Router();
@@ -20,12 +20,12 @@ router.get("/count", async (req: Request, res: Response) => {
 router.post(
   "/add",
   AuthenticationMiddleware.verifyIdToken,
-  AuthenticationMiddleware.authorization,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   uploadFile(upload.fields([{ maxCount: 5, name: "itemImages" }])),
   itemParser,
   itemValidator,
-  resultValidator,
+  expressValidator,
+  validatorBody(ItemAddDto),
   async (req: Request, res: Response) => {
     await controller.addItem(req, res);
   }
@@ -35,13 +35,13 @@ router.post(
 router.put(
   "/update/:id",
   AuthenticationMiddleware.verifyIdToken,
-  AuthenticationMiddleware.authorization,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   uploadFile(upload.fields([{ maxCount: 5, name: "itemImages" }])),
   itemParser,
   itemValidator,
   idValidator,
-  resultValidator,
+  expressValidator,
+  validatorBody(ItemAddDto),
   async (req: Request, res: Response) => {
     await controller.updateItem(req, res);
   }
@@ -51,7 +51,6 @@ router.put(
 router.get(
   "/filter",
   AuthenticationMiddleware.verifyIdToken,
-  AuthenticationMiddleware.authorization,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   async (req: Request, res: Response) => {
     await controller.filterItem(req, res);
@@ -62,10 +61,9 @@ router.get(
 router.delete(
   "/delete/:id",
   AuthenticationMiddleware.verifyIdToken,
-  AuthenticationMiddleware.authorization,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   idValidator,
-  resultValidator,
+  expressValidator,
   async (req: Request, res: Response) => {
     await controller.deleteItem(req, res);
   }
@@ -75,10 +73,9 @@ router.delete(
 router.get(
   "/get/:id",
   AuthenticationMiddleware.verifyIdToken,
-  AuthenticationMiddleware.authorization,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
   idValidator,
-  resultValidator,
+  expressValidator,
   async (req: Request, res: Response) => {
     await controller.getItem(req, res);
   }
@@ -88,7 +85,6 @@ router.get(
 router.get(
   "/get-all",
   AuthenticationMiddleware.verifyIdToken,
-  AuthenticationMiddleware.authorization,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   async (req: Request, res: Response) => {
     await controller.getAllItem(req, res);

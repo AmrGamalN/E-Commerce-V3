@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
+import axios from "axios";
 import {
   auth,
   authentication,
   signInWithEmailAndPassword,
-  // requestForToken,
 } from "../config/firebaseConfig";
 import { ZodError } from "zod";
 import AuthService from "../services/authService";
@@ -18,7 +18,7 @@ class AuthController {
     this.serviceInstance = AuthService.getInstance();
   }
 
-  public static getInstance(): AuthController {
+  static getInstance(): AuthController {
     if (!AuthController.instance) {
       AuthController.instance = new AuthController();
     }
@@ -49,7 +49,7 @@ class AuthController {
   }
 
   // Register user
-  public async registerUser(req: Request, res: Response): Promise<void> {
+  async registerUser(req: Request, res: Response): Promise<void> {
     try {
       const { email, password, role } = req.body;
       let existingUser = null;
@@ -79,7 +79,7 @@ class AuthController {
   }
 
   // Login user
-  public async login(req: Request, res: Response): Promise<void> {
+  async login(req: Request, res: Response): Promise<void> {
     try {
       const { email, password } = req.body;
       let existingUser;
@@ -96,35 +96,23 @@ class AuthController {
       }
 
       // Get token and encrypt token and set in cookie
-      // prettier-ignore
-      const userLogin = await signInWithEmailAndPassword(authentication, email, password);
+      const userLogin = await signInWithEmailAndPassword(
+        authentication,
+        email,
+        password
+      );
+      const accessToken = await userLogin.user.getIdToken();
+      const refreshToken = userLogin.user.refreshToken;
 
-      const tokenCrypt = Buffer.from(
-        await userLogin.user.getIdToken()
-      ).toString("base64");
-
-      res.cookie("AuthToken", tokenCrypt, {
-        // httpOnly: true,
-        // // expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14), // 14 Days
-        // sameSite: "none", //lax //strict
-        // // secure: process.env.NODE_ENV === "production",
-        // secure: false,
-
+      res.cookie("RefreshToken", refreshToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: "lax",
-        domain: "localhost",
+        expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14),
+        sameSite: "strict",
+        secure: process.env.NODE_ENV === "production",
+      });
 
-        // httpOnly: true,
-        // secure: true,
-        // sameSite: "none",
-        // domain: "192.168.1.4",
-      });
       await this.serviceInstance.login(userLogin.user.uid);
-      res.status(200).json({
-        message: "login successfully",
-        data: userLogin.user.uid,
-      });
+      res.status(200).json({ accessToken });
     } catch (error) {
       AuthController.handleError(res, "Failed to login user", error);
     }
@@ -136,7 +124,7 @@ class AuthController {
   // The uid is sent to your API to update the status
 
   // Verify email
-  public async verifyEmail(req: Request, res: Response): Promise<void> {
+  async verifyEmail(req: Request, res: Response): Promise<void> {
     try {
       const { uid } = req.body;
       if (!uid) {
@@ -168,6 +156,51 @@ class AuthController {
       AuthController.handleError(res, "Internal server error.", error);
     }
   }
-}
 
+// refresh token
+  async refreshToken(req: Request, res: Response): Promise<void> {
+    try {
+      const refreshToken = req.cookies?.RefreshToken;
+      if (!refreshToken) {
+        res.status(401).json({ message: "Unauthorized: No refresh token." });
+        return;
+      }
+
+      // Create new access token
+      const response = await axios.post(
+        `https://securetoken.googleapis.com/v1/token?key=${process.env.FIREBASE_API_KEY}`,
+        {
+          grant_type: "refresh_token",
+          refresh_token: refreshToken,
+        }
+      );
+
+      if (!response) {
+        res.status(403).json({ message: "Invalid or expired refresh token." });
+        return;
+      }
+
+      const newAccessToken = response.data.id_token;
+      res.status(200).json({ accessToken: newAccessToken });
+    } catch (error) {
+      AuthController.handleError(res, "Error refreshing token.", error);
+    }
+  }
+
+  // Logout
+  async logOut(req: Request, res: Response): Promise<void> {
+    try {
+      res.clearCookie("RefreshToken", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+      });
+      res.status(200).json({
+        message: "Logged out successfully, clear access token from frontend.",
+      });
+    } catch (error) {
+      AuthController.handleError(res, "Error during logout.", error);
+    }
+  }
+}
 export default AuthController;

@@ -1,7 +1,7 @@
 import express, { Request, Response } from "express";
 import NotificationController from "../controllers/notification.controller";
 import AuthenticationMiddleware from "../middlewares/auth.middleware";
-import { resultValidator, idValidator } from "../validations/general.validator";
+import { idValidator } from "../validations/general.validator";
 const controller = NotificationController.getInstance();
 const router = express.Router();
 
@@ -20,7 +20,7 @@ const router = express.Router();
 router.post(
   "/register-token",
   AuthenticationMiddleware.verifyIdToken,
-  AuthenticationMiddleware.allowTo(["USER","ADMIN", "MANAGER"]),
+  AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   async (req: Request, res: Response) => {
     await controller.storeFcmToken(req, res);
   }
