@@ -50,8 +50,7 @@ class ItemService {
       if (!parsed.success) {
         throw new Error("Invalid item data");
       }
-      const item = { _id, ...parsed.data };
-      return item;
+      return { _id, ...parsed.data };
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error fetching item"

@@ -19,6 +19,7 @@ router.get("/count", async (req: Request, res: Response) => {
 // Add item
 router.post(
   "/add",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   uploadFile(upload.fields([{ maxCount: 5, name: "itemImages" }])),
@@ -34,6 +35,7 @@ router.post(
 // Update item
 router.put(
   "/update/:id",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   uploadFile(upload.fields([{ maxCount: 5, name: "itemImages" }])),
@@ -50,6 +52,7 @@ router.put(
 // Filter item
 router.get(
   "/filter",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   async (req: Request, res: Response) => {
@@ -60,6 +63,7 @@ router.get(
 // Delete item
 router.delete(
   "/delete/:id",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   idValidator,
@@ -72,6 +76,7 @@ router.delete(
 // Get item
 router.get(
   "/get/:id",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
   idValidator,
@@ -84,6 +89,7 @@ router.get(
 // Get all items
 router.get(
   "/get-all",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   async (req: Request, res: Response) => {

@@ -8,7 +8,8 @@ const router = express.Router();
 // // Count address
 // router.get(
 //   "/count",
-//   AuthenticationMiddleware.verifyIdToken,
+//   AuthenticationMiddleware.refreshToken,
+  AuthenticationMiddleware.verifyIdToken,
 //   AuthenticationMiddleware.authorization,
 //   AuthenticationMiddleware.allowTo(["ADMIN", "MANAGER"]),
 //   async (req: Request, res: Response) => {
@@ -19,6 +20,7 @@ const router = express.Router();
 // Add address
 router.post(
   "/register-token",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   async (req: Request, res: Response) => {
@@ -28,6 +30,7 @@ router.post(
 
 router.post(
   "/send-notification",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["ADMIN", "MANAGER"]),
   async (req: Request, res: Response) => {
@@ -38,7 +41,8 @@ router.post(
 // // Update address
 // router.put(
 //   "/update/:id",
-//   AuthenticationMiddleware.verifyIdToken,
+//   AuthenticationMiddleware.refreshToken,
+  // AuthenticationMiddleware.verifyIdToken,
 //   AuthenticationMiddleware.authorization,
 //   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
 //   addressValidator,
@@ -52,7 +56,8 @@ router.post(
 // // Delete address
 // router.delete(
 //   "/delete/:id",
-//   AuthenticationMiddleware.verifyIdToken,
+//   AuthenticationMiddleware.refreshToken,
+  // AuthenticationMiddleware.verifyIdToken,
 //   AuthenticationMiddleware.authorization,
 //   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
 //   idValidator,
@@ -65,7 +70,8 @@ router.post(
 // // Get address
 // router.get(
 //   "/get/:id",
-//   AuthenticationMiddleware.verifyIdToken,
+//   AuthenticationMiddleware.refreshToken,
+  // AuthenticationMiddleware.verifyIdToken,
 //   AuthenticationMiddleware.authorization,
 //   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
 //   idValidator,
@@ -78,7 +84,8 @@ router.post(
 // // Get all address
 // router.get(
 //   "/get-all",
-//   AuthenticationMiddleware.verifyIdToken,
+//   AuthenticationMiddleware.refreshToken,
+  // AuthenticationMiddleware.verifyIdToken,
 //   AuthenticationMiddleware.authorization,
 //   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
 //   async (req: Request, res: Response) => {

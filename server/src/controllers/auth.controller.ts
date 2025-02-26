@@ -157,7 +157,7 @@ class AuthController {
     }
   }
 
-// refresh token
+  // refresh token
   async refreshToken(req: Request, res: Response): Promise<void> {
     try {
       const refreshToken = req.cookies?.RefreshToken;
@@ -190,11 +190,18 @@ class AuthController {
   // Logout
   async logOut(req: Request, res: Response): Promise<void> {
     try {
+      const userId = req.user?.user_id;
       res.clearCookie("RefreshToken", {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
       });
+
+      // Revoke refreshToken from firebase
+      if (userId) {
+        await auth.revokeRefreshTokens(userId);
+      }
+
       res.status(200).json({
         message: "Logged out successfully, clear access token from frontend.",
       });

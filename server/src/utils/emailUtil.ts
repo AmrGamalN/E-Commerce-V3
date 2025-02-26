@@ -13,15 +13,25 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const sendVerificationEmail = async (email: string, link: string) => {
-  await transporter.sendMail({
-    from: process.env.USER_NODE_MAILER,
-    to: email,
-    subject: "Verify Your Email",
-    text: `Please verify your email by clicking the following link: ${link}`,
-    html: `<p>Click the link below to verify your email:</p>
+const sendVerificationEmail = async (
+  email: string,
+  link: string,
+  subject: string,
+  text: string
+): Promise<boolean> => {
+  try {
+    const p = await transporter.sendMail({
+      from: process.env.USER_NODE_MAILER,
+      to: email,
+      subject: subject,
+      text: `${text} ${link}`,
+      html: `<p>Click the link below to verify your email:</p>
       <a href="${link}">${link}</a>`,
-  });
+    });
+    return true;
+  } catch (error) {
+    return false;
+  }
 };
 
 export { sendVerificationEmail };

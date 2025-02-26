@@ -13,6 +13,7 @@ const router = express.Router();
 // Count address
 router.get(
   "/count",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["ADMIN", "MANAGER"]),
   async (req: Request, res: Response) => {
@@ -23,6 +24,7 @@ router.get(
 // Add address
 router.post(
   "/add",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   addressValidator,
@@ -36,6 +38,7 @@ router.post(
 // Update address
 router.put(
   "/update/:id",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   addressValidator,
@@ -49,6 +52,7 @@ router.put(
 // Delete address
 router.delete(
   "/delete/:id",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   idValidator,
@@ -61,6 +65,7 @@ router.delete(
 // Get address
 router.get(
   "/get/:id",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
   idValidator,
@@ -73,6 +78,7 @@ router.get(
 // Get all address
 router.get(
   "/get-all",
+  AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
   async (req: Request, res: Response) => {

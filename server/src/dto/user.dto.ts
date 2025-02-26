@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const UserDto = z.object({
+  _id: z.string().optional(),
   userId: z.string().nonempty("User ID is required"),
   name: z.string(),
   email: z.string().email().nonempty("Email is required"),
@@ -39,4 +40,17 @@ export const UserDto = z.object({
   fcmTokens: z.array(z.string()).default([]),
 });
 
+export const UserUpdateDto = z.object({
+  name: z.string().optional(),
+  mobile: z.string().optional(),
+  coverImage: z.string().default(""),
+  paymentOptions: z.array(z.string()).default([]).optional(),
+  description: z.string().optional().default(""),
+  addressIds: z.array(z.string()).default([]).optional(),
+  allowedToShow: z.array(z.string()).default([]).optional(),
+  profileImage: z.string().default("").optional(),
+});
+
+
+export type UserUpdateDtoType = z.infer<typeof UserUpdateDto>;
 export type UserDtoType = z.infer<typeof UserDto>;
