@@ -5,9 +5,14 @@ import {
   onMessage,
   deleteToken,
 } from "firebase/messaging";
+import { getAuth } from "firebase/auth";
 
+// const firebaseConfig = JSON.parse(process.env.REACT_APP_FIREBASE_CONFIG_CLIENT);
 const firebaseConfig = JSON.parse(process.env.REACT_APP_FIREBASE_CONFIG_CLIENT);
 const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+
+
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker
@@ -22,6 +27,8 @@ if ("serviceWorker" in navigator) {
   console.warn("Service Worker is not supported in this browser.");
 }
 
+
+// Send message
 let messaging;
 if ("Notification" in window && "serviceWorker" in navigator) {
   messaging = getMessaging(app);
@@ -29,6 +36,8 @@ if ("Notification" in window && "serviceWorker" in navigator) {
   console.warn("Firebase Messaging is not supported on this browser.");
 }
 
+
+// Create FCM
 export const requestForToken = async (userId) => {
   try {
     const registration = await navigator.serviceWorker.ready;

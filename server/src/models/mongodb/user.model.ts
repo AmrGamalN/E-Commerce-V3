@@ -15,8 +15,13 @@ const userSchema: Schema = new Schema(
       lowercase: true,
       unique: true,
     },
+    password: {
+      type: String,
+      required: true,
+    },
     mobile: {
       type: String,
+      unique: true,
       default: null,
     },
     gender: {
@@ -132,6 +137,14 @@ const userSchema: Schema = new Schema(
       type: [String],
       default: [],
     },
+    twoFactorSecret: {
+      type: String,
+      default: "",
+    },
+    isTwoFactorAuth: {
+      type: Boolean,
+      default: false,
+    }
   },
   {
     timestamps: true,

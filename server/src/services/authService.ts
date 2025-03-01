@@ -4,7 +4,9 @@ import { auth } from "../config/firebaseConfig";
 import { client } from "../config/redisConfig";
 import { sendVerificationEmail } from "../utils/emailUtil";
 import { RegisterDtoType } from "../dto/auth.dto";
+import { UserDtoType } from "../dto/user.dto";
 import moment from "moment-timezone";
+import bcrypt from "bcrypt";
 
 class AuthService {
   private static instance: AuthService;
@@ -25,17 +27,25 @@ class AuthService {
     body: RegisterDtoType
   ): Promise<void> {
     try {
-      const userRegister = await auth.createUser({ email, password });
+      const userRegister = await auth.createUser({
+        phoneNumber: body.mobile,
+        password,
+        email,
+      });
+
+      const hashPassword = await bcrypt.hash(password, 10);
       const user = new User({
         ...body,
         email: email,
+        password: hashPassword,
         userId: userRegister.uid,
         role: role || "USER",
         dateOfJoining: moment().tz("Africa/Cairo").toISOString(),
         lastSeen: moment().tz("Africa/Cairo").toISOString(),
       });
 
-      const parsed = UserDto.safeParse(user);
+      const { _id, ...userData } = user.toObject();
+      const parsed = UserDto.safeParse(userData);
       if (!parsed.success) {
         throw new Error("Invalid user data");
       }
@@ -61,7 +71,7 @@ class AuthService {
   }
 
   // Login user
-  async login(uid: string): Promise<void> {
+  async loginWithEmail(uid: string): Promise<void> {
     try {
       await User.findOneAndUpdate(
         { userId: uid },
@@ -72,6 +82,27 @@ class AuthService {
           },
         }
       );
+    } catch (error) {
+      throw new Error(
+        error instanceof Error ? error.message : "Failed to login user"
+      );
+    }
+  }
+
+  // Login user
+  async loginWithPhone(mobile: string): Promise<UserDtoType | null> {
+    try {
+      const userLogin = await User.findOneAndUpdate(
+        { mobile: mobile },
+        {
+          $set: {
+            active: true,
+            lastSeen: moment().tz("Africa/Cairo").toISOString(),
+          },
+        },
+        { new: true }
+      ).select("password email mobile role userId");
+      return userLogin;
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Failed to login user"

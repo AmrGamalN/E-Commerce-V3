@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import axios from "axios";
+import bcrypt from "bcrypt";
+import { generateToken } from "../utils/generateToken";
 import {
   auth,
   authentication,
@@ -8,6 +10,7 @@ import {
 import { ZodError } from "zod";
 import AuthService from "../services/authService";
 import dotenv from "dotenv";
+import User from "../models/mongodb/user.model";
 dotenv.config();
 
 class AuthController {
@@ -78,43 +81,85 @@ class AuthController {
     }
   }
 
-  // Login user
-  async login(req: Request, res: Response): Promise<void> {
+  // Login user email
+  async loginWithEmail(req: Request, res: Response): Promise<void> {
     try {
       const { email, password } = req.body;
-      let existingUser;
+
+      let firebaseUser;
       try {
-        existingUser = await auth.getUserByEmail(email);
-      } catch (error: any) {
+        firebaseUser = await auth.getUserByEmail(email);
+      } catch {
         res.status(404).json({ error: "User not found." });
         return;
       }
 
-      if (!existingUser.emailVerified) {
+      if (!firebaseUser.emailVerified) {
         res.status(400).json({ message: "Email is not verified yet" });
         return;
       }
 
-      // Get token and encrypt token and set in cookie
       const userLogin = await signInWithEmailAndPassword(
         authentication,
         email,
         password
       );
-      const accessToken = await userLogin.user.getIdToken();
+      // const accessToken = await userLogin.user.getIdToken();
       const refreshToken = userLogin.user.refreshToken;
 
-      res.cookie("RefreshToken", refreshToken, {
-        httpOnly: true,
-        expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14),
-        sameSite: "strict",
-        secure: process.env.NODE_ENV === "production",
-      });
+      // Check if user signIn  two factor authentication
+      const user = await User.findOne({ email: email });
+      if (user?.isTwoFactorAuth === true) {
+        res
+          .status(200)
+          .json({
+            message: "2FA required",
+            userId: user.userId,
+            refreshToken: refreshToken,
+          });
+        return;
+      }
 
-      await this.serviceInstance.login(userLogin.user.uid);
-      res.status(200).json({ accessToken });
+      // Generate refresh token in cookies
+      generateToken(res, userLogin.user, "email", refreshToken);
+      res.status(200).json({ message: "Login successfully" });
     } catch (error) {
-      AuthController.handleError(res, "Failed to login user", error);
+      res.status(500).json({ error: "Failed to login user", details: error });
+    }
+  }
+
+  // Login user with phone
+  async loginWithPhone(req: Request, res: Response): Promise<void> {
+    try {
+      const { mobile, password } = req.body;
+
+      let firebaseUser;
+      try {
+        firebaseUser = await auth.getUserByPhoneNumber(mobile);
+      } catch {
+        res.status(404).json({ error: "User not found." });
+        return;
+      }
+
+      const userLogin = await this.serviceInstance.loginWithPhone(mobile);
+      if (!userLogin) {
+        res.status(404).json({ error: "User not found." });
+        return;
+      }
+
+      const isPasswordValid = await bcrypt.compare(
+        password,
+        userLogin.password
+      );
+      if (!isPasswordValid) {
+        res.status(401).json({ error: "Invalid credentials" });
+        return;
+      }
+
+      generateToken(res, userLogin, "phone");
+      res.status(200).json({ message: "Login successfully" });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to login user", details: error });
     }
   }
 

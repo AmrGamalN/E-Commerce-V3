@@ -13,7 +13,6 @@ const router = Router();
 router.get(
   "/health-check",
   AuthenticationMiddleware.verifyIdToken,
-  AuthenticationMiddleware.authorization,
   AuthenticationMiddleware.allowTo(["ADMIN", "MANAGER"]),
   (req: Request, res: Response) => {
     console.log("Server is running");
