@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import { auth } from "../config/firebaseConfig";
 import User from "../models/mongodb/user.model";
 import axios from "axios";
+import jwt from "jsonwebtoken";
 
 // Used to add user in request to handle in typescript
 declare module "express-serve-static-core" {
@@ -11,29 +12,45 @@ declare module "express-serve-static-core" {
   }
 }
 class AuthenticationMiddleware {
-  public static async verifyIdToken(
+  static async verifyIdToken(
     req: Request,
     res: Response,
     next: NextFunction
   ): Promise<void> {
     try {
-      const accessToken = req.accessToken;
+      const accessToken = req.accessToken.token;
       if (!accessToken) {
         res.status(401).json({ message: "Unauthorized: No token provided." });
         return;
       }
 
-      const decoded = await auth.verifyIdToken(accessToken);
+      let decoded: any;
+      if (req.accessToken.signWith == "phone") { // Using when user login with phone [using jwt]
+        decoded = jwt.verify(accessToken, process.env.SLAT as string, {
+          algorithms: ["HS256"],
+        });
+      } else { // Using when user login with email [using default firebase token]
+        decoded = await auth.verifyIdToken(accessToken);
+      }
+
       if (!decoded) {
         res.status(401).json({ message: "Invalid Auth Token." });
         return;
       }
 
-      const role = await User.findOne(
+      const user = await User.findOne(
         { userId: decoded?.user_id },
-        { role: 1, _id: 0 }
+        { role: 1, _id: 0, mobile: 1 }
       );
-      req.user = { user_id: decoded.user_id, role: role, email: decoded.email };
+      req.user = {
+        user_id: decoded.user_id,
+        email: decoded.email,
+        mobile: user?.mobile,
+        role: user?.role,
+        signWith: req.accessToken.signWith,
+        isTwoFactorAuth: user?.isTwoFactorAuth,
+      };
+
       next();
     } catch (error: any) {
       if (error.code === "auth/id-token-expired") {
@@ -42,43 +59,44 @@ class AuthenticationMiddleware {
           .json({ message: "Token expired. Please refresh your token." });
         return;
       }
+      console.log(error);
       res.status(500).json({ message: "Authentication error." });
     }
   }
 
-  public static async authorization(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<void> {
-    try {
-      const allowedRoles: string[] = [
-        "USER",
-        "ADMIN",
-        "MANAGER",
-        "CALL_CENTER",
-      ];
-      const userId = req.user?.user_id;
-      const role = req.user?.role.role;
+  // public static async authorization(
+  //   req: Request,
+  //   res: Response,
+  //   next: NextFunction
+  // ): Promise<void> {
+  //   try {
+  //     const allowedRoles: string[] = [
+  //       "USER",
+  //       "ADMIN",
+  //       "MANAGER",
+  //       "CALL_CENTER",
+  //     ];
+  //     const userId = req.user?.user_id;
+  //     const role = req.user?.role.role;
 
-      if (!userId) {
-        res.status(401).json({ message: "Unauthorized: Missing user ID" });
-        return;
-      }
+  //     if (!userId) {
+  //       res.status(401).json({ message: "Unauthorized: Missing user ID" });
+  //       return;
+  //     }
 
-      if (!allowedRoles.includes(role)) {
-        res.status(403).json({ message: "Forbidden: Access denied" });
-        return;
-      }
-      next();
-    } catch (error) {
-      res.status(500).json({ message: "Internal server error" });
-    }
-  }
+  //     if (!allowedRoles.includes(role)) {
+  //       res.status(403).json({ message: "Forbidden: Access denied" });
+  //       return;
+  //     }
+  //     next();
+  //   } catch (error) {
+  //     res.status(500).json({ message: "Internal server error" });
+  //   }
+  // }
 
   public static allowTo(role: string[]) {
     return (req: Request, res: Response, next: NextFunction) => {
-      const userRole = req.user?.role.role;
+      const userRole = req.user?.role;
       if (!userRole) {
         res.status(401).json({ error: "Unauthorized: No user role found" });
         return;
@@ -91,8 +109,7 @@ class AuthenticationMiddleware {
     };
   }
 
-  // refresh token
-  public static async refreshToken(
+  static async refreshToken(
     req: Request,
     res: Response,
     next: NextFunction
@@ -100,29 +117,89 @@ class AuthenticationMiddleware {
     try {
       const refreshToken = req.cookies?.RefreshToken;
       if (!refreshToken) {
-        res.status(401).json({ message: "Unauthorized: No refresh token." });
+        res
+          .status(401)
+          .json({ message: "Unauthorized: No refresh token provided." });
         return;
       }
 
-      // Create new access token
+      const isJwtToken = await AuthenticationMiddleware.refreshTokenWithPhone(
+        req,
+        refreshToken
+      );
+      if (isJwtToken) {
+        return next();
+      }
+ 
+      const isFirebaseToken =
+        await AuthenticationMiddleware.refreshTokenWithEmail(req, refreshToken);
+      if (isFirebaseToken) {
+        return next();
+      }
+
+      res.status(403).json({ message: "Invalid refresh token." });
+      return;
+    } catch (error) {
+      console.log(error)
+      res.status(500).json({
+        message: "Server error while refreshing token.",
+        error: error,
+      });
+    }
+  }
+
+  // Check if the token is of type JWT (phone login)
+  private static async refreshTokenWithPhone(
+    req: Request,
+    refreshToken: string
+  ): Promise<boolean> {
+    try {
+    
+      const decoded = jwt.verify(refreshToken, process.env.SLAT as string, {
+        algorithms: ["HS256"],
+      }) as any;
+
+      if (decoded?.user_id) {
+        const payload = {
+          user_id: decoded.user_id,
+          email: decoded.email,
+          mobile: decoded.mobile,
+          role: decoded.role,
+        };
+
+        const newAccessToken = jwt.sign(payload, process.env.SLAT as string, {
+          expiresIn: "1m",
+          algorithm: "HS256",
+        });
+
+        req.accessToken = { token: newAccessToken, signWith: "phone" };
+        return true;
+      }
+    } catch (error) {
+      return false;
+    }
+    return false;
+  }
+
+  // If not JWT, try with Firebase (email login)
+  private static async refreshTokenWithEmail(
+    req: Request,
+    refreshToken: string
+  ): Promise<boolean> {
+    try {
       const response = await axios.post(
         `https://securetoken.googleapis.com/v1/token?key=${process.env.FIREBASE_API_KEY}`,
-        {
-          grant_type: "refresh_token",
-          refresh_token: refreshToken,
-        }
+        { grant_type: "refresh_token", refresh_token: refreshToken }
       );
 
-      if (!response) {
-        res.status(403).json({ message: "Invalid or expired refresh token." });
-        return;
+      if (response.data?.id_token) {
+        req.accessToken = { token: response.data.id_token, signWith: "email" };
+        return true;
       }
-
-      req.accessToken = response.data.id_token;
-      next();
-    } catch (error) {
-      res.status(500).json({ message: "Invalid or expired refresh token." });
+    } catch (firebaseError) {
+      return false;
     }
+    return false;
   }
 }
 export default AuthenticationMiddleware;

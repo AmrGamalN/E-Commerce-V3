@@ -2,8 +2,33 @@ import { body, check } from "express-validator";
 import { checkArray } from "./general.validator";
 
 export const loginValidator = [
-  body("email").isEmail().withMessage("PLEASE ENTER A VALID EMAIL"),
+  body("email").optional().isEmail().withMessage("PLEASE ENTER A VALID EMAIL"),
   body("password").notEmpty().withMessage("PASSWORD IS REQUIRED"),
+  body("mobile")
+    .optional()
+    .trim()
+    .whitelist("0-9+")
+    .isMobilePhone("ar-EG")
+    .withMessage("INVALID PHONE NUMBER")
+    .isLength({ min: 13, max: 13 })
+    .withMessage("PHONE NUMBER MUST BE 13 DIGITS."),
+
+  body("email").custom((value, { req }) => {
+    // Check if user enter either phone or email only
+    if (!req.body.email && !req.body.mobile) {
+      throw new Error("PHONE IS REQUIRED");
+    }
+    return true;
+  }),
+];
+
+export const OTPValidator = [
+  body("token")
+    .trim()
+    .isInt()
+    .withMessage("INVALID OTP NUMBER")
+    .isLength({ min: 6, max: 6 })
+    .withMessage("OTP MUST BE 6 DIGITS."),
 ];
 
 export const registerValidator = [
@@ -21,7 +46,7 @@ export const registerValidator = [
       "PASSWORD MUST BE 10 CHARACTERS, INCLUDE AT LEAST ONE UPPERCASE LETTER, ONE NUMBER, AND ONE SPECIAL CHARACTER"
     ),
 
-  check("phone")
+  check("mobile")
     .trim()
     .whitelist("0-9+")
     .isMobilePhone("ar-EG")
@@ -36,7 +61,7 @@ export const registerValidator = [
     .withMessage("NAME IS REQUIRED")
     .isLength({ min: 1, max: 25 })
     .withMessage("NAME MUST BE BETWEEN 1 AND 25 CHARACTERS.")
-    .matches(/^[a-zA-Z]+$/)
+    .matches(/^[a-zA-Z ]+$/)
     .withMessage("MUST CONTAIN ONLY LETTERS"),
 
   check("gender")
@@ -64,13 +89,13 @@ export const registerValidator = [
   check("paymentOptions")
     .isArray({ min: 1 })
     .withMessage("PAYMENT OPTIONS ARE REQUIRED")
-    .matches(/^[a-zA-Z]+$/)
+    .matches(/^[a-zA-Z ]+$/)
     .withMessage("MUST CONTAIN ONLY LETTERS"),
 
   check("description")
     .optional()
     .trim()
-    .matches(/^[a-zA-Z]+$/)
+    .matches(/^[a-zA-Z ]+$/)
     .withMessage("MUST CONTAIN ONLY LETTERS")
     .isLength({ min: 1, max: 100 })
     .withMessage("DESCRIPTION MUST BE BETWEEN 1 AND 100 CHARACTERS."),

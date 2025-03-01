@@ -10,6 +10,7 @@ export const userRegisterParser = (
         (fileArray as Express.Multer.File[]).map((file) => file.path)
       )
     : [];
+
   req.body.paymentOptions = req.body.paymentOptions.split(",");
   req.body.addressIds = req.body.addressIds.split(",");
   req.body.allowedToShow = req.body.allowedToShow.split(",");
@@ -17,6 +18,7 @@ export const userRegisterParser = (
   req.body.personal = req.body.personal === "true";
   req.body.coverImage = files[1];
   req.body.profileImage = files[0];
+
   next();
 };
 

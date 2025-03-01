@@ -5,7 +5,8 @@ export const UserDto = z.object({
   userId: z.string().nonempty("User ID is required"),
   name: z.string(),
   email: z.string().email().nonempty("Email is required"),
-  mobile: z.string(),
+  password: z.string().nonempty("Password is required"),
+  mobile: z.string().nonempty("Password is required"),
   gender: z.string(),
   role: z.enum(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]).default("USER"),
   coverImage: z.string().default(""),
@@ -38,19 +39,20 @@ export const UserDto = z.object({
     .default([]),
   dateOfJoining: z.date().default(new Date()),
   fcmTokens: z.array(z.string()).default([]),
+  twoFactorSecret: z.string().default("").optional(),
+  isTwoFactorAuth: z.boolean().default(false).optional(),
 });
 
 export const UserUpdateDto = z.object({
   name: z.string().optional(),
   mobile: z.string().optional(),
-  coverImage: z.string().default(""),
+  coverImage: z.string().default("").optional(),
   paymentOptions: z.array(z.string()).default([]).optional(),
   description: z.string().optional().default(""),
   addressIds: z.array(z.string()).default([]).optional(),
   allowedToShow: z.array(z.string()).default([]).optional(),
   profileImage: z.string().default("").optional(),
 });
-
 
 export type UserUpdateDtoType = z.infer<typeof UserUpdateDto>;
 export type UserDtoType = z.infer<typeof UserDto>;
