@@ -8,6 +8,7 @@ const reviewSchema: Schema = new Schema({
   title: { type: String, enum: title, required: true, default: "good" },
   buyerId: { type: String, required: true },
   sellerId: { type: String, required: true },
+  buyerName:{ type: String, required: true },
   itemId: { type: String, required: true },
 }, {timestamps:true});
 

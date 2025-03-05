@@ -1,0 +1,104 @@
+/* الحاوية الرئيسية للدردشة */
+.chat-container {
+    max-width: 400px;
+    margin: 20px auto;
+    background: #f9f9f9;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* عنوان الدردشة */
+.chat-header {
+    background: #007bff;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+/* صندوق الرسائل */
+.chat-box {
+    height: 300px;
+    overflow-y: auto;
+    padding: 10px;
+    background: white;
+    display: flex;
+    flex-direction: column;
+}
+
+/* تصميم كل رسالة */
+.message {
+    max-width: 75%;
+    padding: 8px 12px;
+    border-radius: 15px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    word-wrap: break-word;
+    position: relative;
+}
+
+/* الرسائل المرسلة */
+.sent {
+    background: #007bff;
+    color: white;
+    align-self: flex-end;
+    border-bottom-right-radius: 2px;
+}
+
+/* الرسائل المستلمة */
+.received {
+    background: #e5e5e5;
+    color: black;
+    align-self: flex-start;
+    border-bottom-left-radius: 2px;
+}
+
+/* توقيت كل رسالة */
+.timestamp {
+    display: block;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 5px;
+}
+
+/* إدخال النص وزر الإرسال */
+.chat-input {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid #ddd;
+    background: #fff;
+}
+
+.message-input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    outline: none;
+}
+
+.send-button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    margin-left: 8px;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+.send-button:hover {
+    background: #0056b3;
+}
+
+
+.typing-indicator {
+    font-size: 12px;
+    color: gray;
+    margin-top: 5px;
+    text-align: left;
+}

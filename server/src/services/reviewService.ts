@@ -23,6 +23,7 @@ class ReviewService {
   async addReview(
     data: ReviewDtoAddType,
     buyerId: string,
+    buyerName: string,
     itemId: string
   ): Promise<ReviewDtoAddType> {
     try {
@@ -47,6 +48,7 @@ class ReviewService {
         ...parsed.data,
         itemId,
         buyerId: buyerId,
+        buyerName:buyerName,
         sellerId: item?.userId,
       });
 
