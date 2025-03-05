@@ -3,6 +3,7 @@ import { z } from "zod";
 export const ReviewDto = z.object({
   rate: z.number(),
   description: z.string(),
+  buyerName: z.string(),
   title: z
     .enum(["bad", "average", "good", "very good", "excellent"])
     .default("good"),
@@ -17,6 +18,7 @@ export const ReviewAddDto = z.object({
   title: z
     .enum(["bad", "average", "good", "very good", "excellent"])
     .default("good"),
+
 });
 
 export type ReviewDtoType = z.infer<typeof ReviewDto>;

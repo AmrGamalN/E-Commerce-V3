@@ -46,10 +46,12 @@ class ReviewController {
   async addReview(req: Request, res: Response): Promise<void> {
     try {
       const buyerId = req.user?.user_id;
+      const buyerName = req.user?.name;
       const { id } = req.params;
       const retrievedReview = await this.serviceInstance.addReview(
         req.body,
         buyerId,
+        buyerName,
         String(id)
       );
       if (!retrievedReview) {

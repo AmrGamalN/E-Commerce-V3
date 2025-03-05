@@ -67,7 +67,7 @@
 import React, { useState, useEffect } from "react";
 import { getMessaging, onMessage } from "firebase/messaging";
 import { initializeApp } from "firebase/app";
-import "../Notifications.css";
+import "../css/Notifications.css";
 
 const firebaseConfig = JSON.parse(process.env.REACT_APP_FIREBASE_CONFIG_CLIENT);
 const app = initializeApp(firebaseConfig);

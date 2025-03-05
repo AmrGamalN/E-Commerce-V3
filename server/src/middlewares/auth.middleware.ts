@@ -25,11 +25,13 @@ class AuthenticationMiddleware {
       }
 
       let decoded: any;
-      if (req.accessToken.signWith == "phone") { // Using when user login with phone [using jwt]
+      if (req.accessToken.signWith == "phone") {
+        // Using when user login with phone [using jwt]
         decoded = jwt.verify(accessToken, process.env.SLAT as string, {
           algorithms: ["HS256"],
         });
-      } else { // Using when user login with email [using default firebase token]
+      } else {
+        // Using when user login with email [using default firebase token]
         decoded = await auth.verifyIdToken(accessToken);
       }
 
@@ -38,13 +40,14 @@ class AuthenticationMiddleware {
         return;
       }
 
-      const user = await User.findOne(
-        { userId: decoded?.user_id },
-        { role: 1, _id: 0, mobile: 1 }
-      );
+      const user = await User.findOne({ userId: decoded?.user_id })
+        .select(["role", "mobile", "name"])
+        .lean();
+
       req.user = {
         user_id: decoded.user_id,
         email: decoded.email,
+        name: user?.name,
         mobile: user?.mobile,
         role: user?.role,
         signWith: req.accessToken.signWith,
@@ -59,7 +62,6 @@ class AuthenticationMiddleware {
           .json({ message: "Token expired. Please refresh your token." });
         return;
       }
-      console.log(error);
       res.status(500).json({ message: "Authentication error." });
     }
   }
@@ -130,7 +132,7 @@ class AuthenticationMiddleware {
       if (isJwtToken) {
         return next();
       }
- 
+
       const isFirebaseToken =
         await AuthenticationMiddleware.refreshTokenWithEmail(req, refreshToken);
       if (isFirebaseToken) {
@@ -140,7 +142,7 @@ class AuthenticationMiddleware {
       res.status(403).json({ message: "Invalid refresh token." });
       return;
     } catch (error) {
-      console.log(error)
+      console.log(error);
       res.status(500).json({
         message: "Server error while refreshing token.",
         error: error,
@@ -154,7 +156,6 @@ class AuthenticationMiddleware {
     refreshToken: string
   ): Promise<boolean> {
     try {
-    
       const decoded = jwt.verify(refreshToken, process.env.SLAT as string, {
         algorithms: ["HS256"],
       }) as any;

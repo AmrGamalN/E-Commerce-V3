@@ -11,6 +11,8 @@ import { ZodError } from "zod";
 import AuthService from "../services/authService";
 import dotenv from "dotenv";
 import User from "../models/mongodb/user.model";
+
+
 dotenv.config();
 
 class AuthController {
@@ -110,19 +112,19 @@ class AuthController {
       // Check if user signIn  two factor authentication
       const user = await User.findOne({ email: email });
       if (user?.isTwoFactorAuth === true) {
-        res
-          .status(200)
-          .json({
-            message: "2FA required",
-            userId: user.userId,
-            refreshToken: refreshToken,
-          });
+        res.status(200).json({
+          message: "2FA required",
+          userId: user.userId,
+          refreshToken: refreshToken,
+        });
         return;
       }
 
       // Generate refresh token in cookies
       generateToken(res, userLogin.user, "email", refreshToken);
-      res.status(200).json({ message: "Login successfully" });
+      res
+        .status(200)
+        .json({ message: "Login successfully", userId: user?.userId });
     } catch (error) {
       res.status(500).json({ error: "Failed to login user", details: error });
     }
@@ -141,27 +143,25 @@ class AuthController {
         return;
       }
 
-      const userLogin = await this.serviceInstance.loginWithPhone(mobile);
-      if (!userLogin) {
+      const user = await this.serviceInstance.loginWithPhone(mobile);
+      if (!user) {
         res.status(404).json({ error: "User not found." });
         return;
       }
 
-      const isPasswordValid = await bcrypt.compare(
-        password,
-        userLogin.password
-      );
+      const isPasswordValid = await bcrypt.compare(password, user.password);
       if (!isPasswordValid) {
         res.status(401).json({ error: "Invalid credentials" });
         return;
       }
 
-      generateToken(res, userLogin, "phone");
+      generateToken(res, user, "phone");
       res.status(200).json({ message: "Login successfully" });
     } catch (error) {
       res.status(500).json({ error: "Failed to login user", details: error });
     }
   }
+
 
   // When the user clicks on the verification link:
   // It is received in the Frontend interface
