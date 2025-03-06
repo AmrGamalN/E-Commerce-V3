@@ -9,6 +9,7 @@ import UserRouters from "./routes/user.routes";
 import NotificationRouters from "./routes/notification.routes";
 import MessageRouters from "./routes/message.routes";
 import ReportRouters from "./routes/report.routes";
+import FollowRouters from "./routes/follow.routes";
 import AuthenticationMiddleware from "./middlewares/auth.middleware";
 const router = Router();
 
@@ -34,6 +35,7 @@ router.use("/notification", NotificationRouters);
 router.use("/conversation", ConversationRouters);
 router.use("/message", MessageRouters);
 router.use("/report", ReportRouters);
+router.use("/follow", FollowRouters);
 
 // router.use("/order");
 // router.use("/cart");

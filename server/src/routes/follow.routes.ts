@@ -1,110 +1,88 @@
 import express, { Request, Response } from "express";
-import ReportController from "../controllers/report.controller";
+import FollowController from "../controllers/follow.controller";
 import AuthenticationMiddleware from "../middlewares/auth.middleware";
 import { expressValidator } from "../middlewares/express.validator.middleware";
 import { idValidator } from "../validations/general.validator";
-import {
-  reportValidator,
-  reportUpdateValidator,
-  reportFeedBackValidator,
-} from "../validations/report.validator";
-import {
-  ReportAddDto,
-  ReportUpdateDto,
-  ReportFeedBackDto,
-} from "../dto/report.dto";
-import { validatorBody } from "../middlewares/zod.validator.middleware";
+import { followValidator } from "../validations/follow.validator";
 
-const controller = ReportController.getInstance();
+const controller = FollowController.getInstance();
 const router = express.Router();
 
-// Count report
+// Count follow
 router.get(
   "/count",
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
-  AuthenticationMiddleware.allowTo(["ADMIN", "MANAGER"]),
+  AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
+  followValidator,
+  expressValidator,
   async (req: Request, res: Response) => {
-    await controller.countReport(req, res);
+    await controller.countFollow(req, res);
   }
 );
 
-// Add report
+// Count follow
+router.get(
+  "/search",
+  AuthenticationMiddleware.refreshToken,
+  AuthenticationMiddleware.verifyIdToken,
+  AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
+  followValidator,
+  expressValidator,
+  async (req: Request, res: Response) => {
+    await controller.searchFollow(req, res);
+  }
+);
+
+// Add follow
 router.post(
   "/add",
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
-  reportValidator,
+  followValidator,
   expressValidator,
-  validatorBody(ReportAddDto),
   async (req: Request, res: Response) => {
-    await controller.addReport(req, res);
+    await controller.addFollow(req, res);
   }
 );
 
-// Update report
-router.put(
-  "/update",
-  AuthenticationMiddleware.refreshToken,
-  AuthenticationMiddleware.verifyIdToken,
-  AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
-  reportUpdateValidator,
-  expressValidator,
-  validatorBody(ReportUpdateDto),
-  async (req: Request, res: Response) => {
-    await controller.updateReport(req, res);
-  }
-);
-
-// feedback report
-router.put(
-  "/feedback",
-  AuthenticationMiddleware.refreshToken,
-  AuthenticationMiddleware.verifyIdToken,
-  AuthenticationMiddleware.allowTo(["ADMIN", "MANAGER"]),
-  reportFeedBackValidator,
-  expressValidator,
-  validatorBody(ReportFeedBackDto),
-  async (req: Request, res: Response) => {
-    await controller.feedBackReport(req, res);
-  }
-);
-
-// Delete report
+// Delete follow
 router.delete(
   "/delete/:id",
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
-  AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
+  AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER","CALL_CENTER"]),
   idValidator,
+  followValidator,
   expressValidator,
   async (req: Request, res: Response) => {
-    await controller.deleteReport(req, res);
+    await controller.deleteFollow(req, res);
   }
 );
 
-// Get report
+// Get follow
 router.get(
   "/get/:id",
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
   idValidator,
+  followValidator,
   expressValidator,
   async (req: Request, res: Response) => {
-    await controller.getReport(req, res);
+    await controller.getFollow(req, res);
   }
 );
 
-// Get all report
+// Get all follow
 router.get(
   "/get-all",
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
   async (req: Request, res: Response) => {
-    await controller.getAllReport(req, res);
+    await controller.getAllFollow(req, res);
   }
 );
 

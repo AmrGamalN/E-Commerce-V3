@@ -20,26 +20,18 @@ class AuthService {
   }
 
   // Register user
-  async registerUser(
-    email: string,
-    password: string,
-    role: string,
-    body: RegisterDtoType
-  ): Promise<void> {
+  async registerUser(body: RegisterDtoType): Promise<void> {
     try {
       const userRegister = await auth.createUser({
         phoneNumber: body.mobile,
-        password,
-        email,
+        password: body.password,
+        email: body.email,
       });
 
-      const hashPassword = await bcrypt.hash(password, 10);
       const user = new User({
         ...body,
-        email: email,
-        password: hashPassword,
+        password: await bcrypt.hash(body.password, 10),
         userId: userRegister.uid,
-        role: role || "USER",
         dateOfJoining: moment().tz("Africa/Cairo").toISOString(),
         lastSeen: moment().tz("Africa/Cairo").toISOString(),
       });
@@ -50,17 +42,19 @@ class AuthService {
         throw new Error("Invalid user data");
       }
 
-      // Store user details in caching and send verification to use email
-      const verificationLink = await auth.generateEmailVerificationLink(email);
+      // Store user data in caching and send verification to verify email
+      const verificationLink = await auth.generateEmailVerificationLink(
+        body.email
+      );
       await sendVerificationEmail(
-        email,
+        body.email,
         verificationLink,
         "Verify Your Email",
         "Please verify your email by clicking the following link:"
       );
       await client.setEx(
         `userId:${userRegister.uid}`,
-        3600, // After 1 hours delete user auto from caching
+        3600,
         JSON.stringify(user)
       );
     } catch (error) {
@@ -73,7 +67,7 @@ class AuthService {
   // Login user
   async loginWithEmail(uid: string): Promise<void> {
     try {
-      await User.findOneAndUpdate(
+      await User.updateOne(
         { userId: uid },
         {
           $set: {
@@ -101,7 +95,9 @@ class AuthService {
           },
         },
         { new: true }
-      ).select("password email mobile role userId");
+      ).select(
+        "password email mobile role userId numberLogin lastFailedLoginTime"
+      );
       return userLogin;
     } catch (error) {
       throw new Error(
@@ -113,10 +109,13 @@ class AuthService {
   // Verify email
   async verifyEmail(uid: string): Promise<void> {
     try {
+      // Get user data from redis caching
       const userDataString = (await client.get(`userId:${uid}`)) ?? "";
       if (!userDataString) {
         throw new Error("User not found in cache");
       }
+
+      // Update user data in mongodb and save & Delete from caching
       const userData = JSON.parse(userDataString);
       userData.dateOfJoining = new Date(userData.dateOfJoining);
       userData.lastSeen = new Date(userData.lastSeen);
@@ -126,7 +125,6 @@ class AuthService {
         throw new Error("Invalid user data");
       }
 
-      // Create and save user in mongodb & Delete from caching
       const user = new User(userData);
       await user.save();
       await client.del(`userId:${uid}`);

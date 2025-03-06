@@ -62,10 +62,12 @@ const userSchema: Schema = new Schema(
     followers: {
       type: Number,
       default: 0,
+      min: 0,
     },
     following: {
       type: Number,
       default: 0,
+      min: 0,
     },
     lastSeen: {
       type: Date,
@@ -144,7 +146,9 @@ const userSchema: Schema = new Schema(
     isTwoFactorAuth: {
       type: Boolean,
       default: false,
-    }
+    },
+    numberLogin: { type: Number, default: 0 },
+    lastFailedLoginTime: { type: Date, default: null },
   },
   {
     timestamps: true,

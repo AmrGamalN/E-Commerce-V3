@@ -3,13 +3,14 @@ import { checkArray } from "./general.validator";
 
 export const userValidator = [
   check("name")
-    .isString()
     .trim()
-    .isLength({ min: 1, max: 25 })
-    .withMessage("NAME MUST BE BETWEEN 1 AND 25 CHARACTERS.")
-    .matches(/^[a-zA-Z]+$/)
-    .withMessage("MUST CONTAIN ONLY LETTERS")
-    .optional(),
+    .isString()
+    .notEmpty()
+    .withMessage("NAME IS REQUIRED")
+    .isLength({ min: 1, max: 30 })
+    .withMessage("NAME MUST BE BETWEEN 1 AND 30 CHARACTERS.")
+    .matches(/^[a-zA-Z ]+$/)
+    .withMessage("MUST CONTAIN ONLY LETTERS"),
 
   check("mobile")
     .trim()
@@ -17,8 +18,7 @@ export const userValidator = [
     .isMobilePhone("ar-EG")
     .withMessage("INVALID PHONE NUMBER")
     .isLength({ min: 13, max: 13 })
-    .withMessage("PHONE NUMBER MUST BE 13 DIGITS.")
-    .optional(),
+    .withMessage("PHONE NUMBER MUST BE 13 DIGITS."),
 
   check("profileImage").isString().optional(),
 
@@ -63,17 +63,15 @@ export const userValidator = [
 
 export const userPasswordValidator = [
   check("password")
-  .notEmpty()
-  .withMessage("PASSWORD IS REQUIRED")
-  .isStrongPassword({
-    minLength: 10,
-    minUppercase: 1,
-    minNumbers: 1,
-    minSymbols: 1,
-  })
-  .withMessage(
-    "PASSWORD MUST BE 10 CHARACTERS, INCLUDE AT LEAST ONE UPPERCASE LETTER, ONE NUMBER, AND ONE SPECIAL CHARACTER"
-  ),
+    .notEmpty()
+    .withMessage("PASSWORD IS REQUIRED")
+    .isStrongPassword({
+      minLength: 10,
+      minUppercase: 1,
+      minNumbers: 1,
+      minSymbols: 1,
+    })
+    .withMessage(
+      "PASSWORD MUST BE 10 CHARACTERS, INCLUDE AT LEAST ONE UPPERCASE LETTER, ONE NUMBER, AND ONE SPECIAL CHARACTER"
+    ),
 ];
-
-

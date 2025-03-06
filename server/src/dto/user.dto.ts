@@ -41,6 +41,8 @@ export const UserDto = z.object({
   fcmTokens: z.array(z.string()).default([]),
   twoFactorSecret: z.string().default("").optional(),
   isTwoFactorAuth: z.boolean().default(false).optional(),
+  numberLogin: z.number().default(0),
+  lastFailedLoginTime: z.date(),
 });
 
 export const UserUpdateDto = z.object({

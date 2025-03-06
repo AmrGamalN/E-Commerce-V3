@@ -2,7 +2,9 @@ import { z } from "zod";
 
 export const RegisterDto = z.object({
   name: z.string().nonempty("name is required"),
-  mobile: z.string(),
+  email: z.string().email().nonempty("Email is required"),
+  password: z.string().nonempty("Password is required"),
+  mobile: z.string().nonempty("Password is required"),
   gender: z.string(),
   business: z.boolean().default(false),
   personal: z.boolean().default(true),
