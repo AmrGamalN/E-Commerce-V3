@@ -7,11 +7,13 @@ import {
   authentication,
   signInWithEmailAndPassword,
 } from "../config/firebaseConfig";
-import { ZodError } from "zod";
+import { date, ZodError } from "zod";
 import AuthService from "../services/authService";
 import dotenv from "dotenv";
 import User from "../models/mongodb/user.model";
-
+import { error } from "console";
+import { check } from "express-validator";
+import { UserDtoType } from "../dto/user.dto";
 
 dotenv.config();
 
@@ -56,7 +58,8 @@ class AuthController {
   // Register user
   async registerUser(req: Request, res: Response): Promise<void> {
     try {
-      const { email, password, role } = req.body;
+      const { email } = req.body;
+      // check user is existed in firebase or not
       let existingUser = null;
       try {
         existingUser = await auth.getUserByEmail(email);
@@ -68,13 +71,12 @@ class AuthController {
           return;
         }
       }
-
       if (existingUser) {
         res.status(409).json({ message: "Email already exists." });
         return;
       }
 
-      await this.serviceInstance.registerUser(email, password, role, req.body);
+      await this.serviceInstance.registerUser(req.body);
       res.status(201).json({
         message: "User registered successfully. Please verify your email.",
       });
@@ -83,50 +85,78 @@ class AuthController {
     }
   }
 
-  // Login user email
+  // Login user with email
   async loginWithEmail(req: Request, res: Response): Promise<void> {
     try {
       const { email, password } = req.body;
 
+      // Find the user in the database
+      const existingUser = await User.findOne({ email })
+        .select([
+          "email",
+          "isTwoFactorAuth",
+          "userId",
+          "numberLogin",
+          "lastFailedLoginTime",
+        ])
+        .lean();
+
+      if (!existingUser) {
+        res.status(404).json({ error: "User not found in database." });
+        return;
+      }
+
+      // Check if the user has reached the max failed attempts
+      const isBlocked = await this.checkAttemptsLogin(existingUser, res);
+      if (isBlocked == true) return;
+
+      // Retrieve user from Firebase Authentication by [ email ]
       let firebaseUser;
       try {
         firebaseUser = await auth.getUserByEmail(email);
       } catch {
-        res.status(404).json({ error: "User not found." });
+        res.status(404).json({ error: "User not found in Firebase." });
         return;
       }
 
+      // Check if the user's email is verified
       if (!firebaseUser.emailVerified) {
-        res.status(400).json({ message: "Email is not verified yet" });
+        res.status(400).json({ message: "Email is not verified yet." });
         return;
       }
 
-      const userLogin = await signInWithEmailAndPassword(
-        authentication,
+      // Authenticate the user using Firebase Authentication
+      const firebaseAuthResponse = await this.firebaseAuthenticate(
+        existingUser,
+        res,
         email,
         password
       );
-      // const accessToken = await userLogin.user.getIdToken();
-      const refreshToken = userLogin.user.refreshToken;
+      if (!firebaseAuthResponse) return;
 
-      // Check if user signIn  two factor authentication
-      const user = await User.findOne({ email: email });
-      if (user?.isTwoFactorAuth === true) {
+      // Get the refresh token from Firebase authentication response
+      // const accessToken = await firebaseAuthResponse.user.getIdToken();
+      const userRefreshToken = firebaseAuthResponse.user.refreshToken;
+
+      // Check if Two-Factor Authentication (2FA) is enabled
+      if (existingUser.isTwoFactorAuth) {
         res.status(200).json({
           message: "2FA required",
-          userId: user.userId,
-          refreshToken: refreshToken,
+          userId: existingUser.userId,
+          refreshToken: userRefreshToken,
         });
         return;
       }
 
-      // Generate refresh token in cookies
-      generateToken(res, userLogin.user, "email", refreshToken);
-      res
-        .status(200)
-        .json({ message: "Login successfully", userId: user?.userId });
+      // Generate and store the refresh token in cookies
+      generateToken(res, firebaseAuthResponse.user, "email", userRefreshToken);
+
+      res.status(200).json({
+        message: "Login successful",
+        userId: existingUser.userId,
+      });
     } catch (error) {
-      res.status(500).json({ error: "Failed to login user", details: error });
+      res.status(500).json({ error: "Internal server error", details: error });
     }
   }
 
@@ -135,33 +165,116 @@ class AuthController {
     try {
       const { mobile, password } = req.body;
 
-      let firebaseUser;
+      // Retrieve user from Firebase Authentication
       try {
-        firebaseUser = await auth.getUserByPhoneNumber(mobile);
-      } catch {
+        const firebaseUser = await auth.getUserByPhoneNumber(mobile);
+      } catch (error) {
+        res.status(404).json({ error: "User not found.", details: error });
+        return;
+      }
+
+      // Find the user in the database
+      const retrievedUser = await this.serviceInstance.loginWithPhone(mobile);
+      if (!retrievedUser) {
         res.status(404).json({ error: "User not found." });
         return;
       }
 
-      const user = await this.serviceInstance.loginWithPhone(mobile);
-      if (!user) {
-        res.status(404).json({ error: "User not found." });
-        return;
-      }
+      // Check if the user has reached the max failed attempts
+      const isBlocked = await this.checkAttemptsLogin(retrievedUser, res);
+      if (isBlocked == true) return;
 
-      const isPasswordValid = await bcrypt.compare(password, user.password);
+      const isPasswordValid = await bcrypt.compare(
+        password,
+        retrievedUser.password
+      );
       if (!isPasswordValid) {
+        // Used to check the number of failed login attempts
+        const failedAttempts = retrievedUser.numberLogin + 1;
+        await User.updateOne(
+          { mobile },
+          {
+            $set: {
+              numberLogin: failedAttempts,
+              lastFailedLoginTime: new Date().toISOString(),
+            },
+          }
+        );
         res.status(401).json({ error: "Invalid credentials" });
         return;
       }
 
-      generateToken(res, user, "phone");
+      generateToken(res, retrievedUser, "phone");
       res.status(200).json({ message: "Login successfully" });
     } catch (error) {
       res.status(500).json({ error: "Failed to login user", details: error });
     }
   }
 
+  // Used to check the number of failed login attempts
+  // Used to avoid brute force attack
+  private async checkAttemptsLogin(
+    existingUser: UserDtoType,
+    res: Response
+  ): Promise<boolean> {
+    if (existingUser.numberLogin >= 3) {
+      const currentTime = Date.now();
+      const lastFailedTime = new Date(
+        existingUser.lastFailedLoginTime
+      ).getTime();
+      const timeDifference = (currentTime - lastFailedTime) / (1000 * 60);
+
+      if (timeDifference < 10) {
+        const remainingTime = Math.ceil(10 - timeDifference);
+        res.status(400).json({
+          message: `Your account is temporarily locked due to multiple failed login attempts. Please try again in ${remainingTime} minutes or reset your password.`,
+          remainingTime: remainingTime,
+        });
+        return true;
+      }
+
+      // Reset failed login attempts after 10 minutes
+      await User.updateOne(
+        { email: existingUser.email },
+        { $set: { numberLogin: 0, lastFailedLogin: null } }
+      );
+    }
+    return false;
+  }
+
+  // Authenticate the user using Firebase Authentication to email & update number attempts login
+  private async firebaseAuthenticate(
+    existingUser: UserDtoType,
+    res: Response,
+    email: string,
+    password: string
+  ): Promise<any> {
+    let firebaseAuthResponse;
+    try {
+      firebaseAuthResponse = await signInWithEmailAndPassword(
+        authentication,
+        email,
+        password
+      );
+    } catch (error: any) {
+      if (error.code === "auth/invalid-credential") {
+        const failedAttempts = existingUser.numberLogin + 1;
+        await User.updateOne(
+          { email },
+          {
+            $set: {
+              numberLogin: failedAttempts,
+              lastFailedLoginTime: new Date().toISOString(),
+            },
+          }
+        );
+
+        res.status(400).json({ error: "Invalid email or password." });
+        return;
+      }
+    }
+    return firebaseAuthResponse;
+  }
 
   // When the user clicks on the verification link:
   // It is received in the Frontend interface

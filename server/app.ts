@@ -13,20 +13,13 @@ import cookieParser from "cookie-parser";
 import dotenv from "dotenv";
 const xssClean = require("xss-clean");
 import helmet from "helmet";
-import { Server } from "socket.io";
 import http from "http";
-// import { socket } from "./src/config/socket.io";
 import { initializeSocket } from "./src/config/socket.io";
 dotenv.config();
 
 // Define express app & swagger
 const swaggerDocs = swaggerJsdoc(swaggerOptions);
 const app: Application = express();
-
-// Create WebSocket Server
-// const server = http.createServer(app);
-// const io = new Server(server);
-// socket(io);
 
 const server = http.createServer(app);
 initializeSocket(server);

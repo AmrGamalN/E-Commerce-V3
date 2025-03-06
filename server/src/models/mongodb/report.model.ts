@@ -1,15 +1,31 @@
 import { Schema, model } from "mongoose";
 import { ReportDtoType } from "../../dto/report.dto";
 
+const ReportFeedBackSchema = new Schema(
+  {
+    replyId: {
+      type: String,
+      ref: "User",
+      required: true,
+    },
+    replyName: { type: String, required: true },
+    message: { type: String, required: true },
+    replyTime: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
 // Define the schema for a report
 const ReportSchema = new Schema(
   {
-    id: {
+    modelId: {
       // Conversation or item
       type: String,
       required: true,
     },
     reporterId: { type: String, required: true },
+    reporterName: { type: String, required: true },
+    reporterEmail: { type: String, required: true },
     reportedUserId: { type: String, required: true },
     subject: { type: String, required: true },
     reportType: {
@@ -23,6 +39,7 @@ const ReportSchema = new Schema(
       enum: ["PENDING", "REVIEWED", "RESOLVED"],
       default: "PENDING",
     },
+    feedBack: ReportFeedBackSchema,
   },
   { timestamps: true }
 );

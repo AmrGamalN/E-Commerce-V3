@@ -20,13 +20,16 @@ const sendVerificationEmail = async (
   text: string
 ): Promise<boolean> => {
   try {
-    const p = await transporter.sendMail({
+    await transporter.sendMail({
       from: process.env.USER_NODE_MAILER,
       to: email,
       subject: subject,
-      text: `${text} ${link}`,
-      html: `<p>Click the link below to verify your email:</p>
-      <a href="${link}">${link}</a>`,
+      text: link != "" ? `${text} ${link}` : text,
+      html:
+        link != ""
+          ? `<p>Click the link below to verify your email:</p>
+      <a href="${link}">${link}</a>`
+          : "",
     });
     return true;
   } catch (error) {

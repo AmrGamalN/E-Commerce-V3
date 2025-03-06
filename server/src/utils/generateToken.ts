@@ -16,6 +16,7 @@ export const generateToken = (
     signWith: typeLogin,
   };
 
+  // check type login if phone create refresh token , if email take refresh token from firebase
   if (typeLogin === "phone") {
     refreshToken = jwt.sign(payload, process.env.SLAT as string, {
       expiresIn: "14d",
@@ -23,6 +24,7 @@ export const generateToken = (
     });
   }
 
+  // Add refresh token in cookies
   res.cookie("RefreshToken", refreshToken, {
     httpOnly: true,
     expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 14),
