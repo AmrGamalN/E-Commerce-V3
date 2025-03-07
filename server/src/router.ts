@@ -10,6 +10,8 @@ import NotificationRouters from "./routes/notification.routes";
 import MessageRouters from "./routes/message.routes";
 import ReportRouters from "./routes/report.routes";
 import FollowRouters from "./routes/follow.routes";
+import OrderRouters from "./routes/order.routes";
+import CouponRouters from "./routes/coupon.routes";
 import AuthenticationMiddleware from "./middlewares/auth.middleware";
 const router = Router();
 
@@ -36,8 +38,10 @@ router.use("/conversation", ConversationRouters);
 router.use("/message", MessageRouters);
 router.use("/report", ReportRouters);
 router.use("/follow", FollowRouters);
+router.use("/order", OrderRouters);
+router.use("/coupon", CouponRouters);
 
-// router.use("/order");
 // router.use("/cart");
+// router.use("/payment");
 
 export default router;

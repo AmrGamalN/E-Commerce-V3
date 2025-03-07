@@ -1,4 +1,4 @@
-import mongoose, { model, Schema } from "mongoose";
+import { model, Schema } from "mongoose";
 import { AddressDtoType } from "../../dto/address.dto";
 
 const addressSchema: Schema = new Schema({

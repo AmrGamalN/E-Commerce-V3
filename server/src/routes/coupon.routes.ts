@@ -1,102 +1,110 @@
 import express, { Request, Response } from "express";
-import ReviewController from "../controllers/review.controller";
+import CouponController from "../controllers/coupon.controller";
 import AuthenticationMiddleware from "../middlewares/auth.middleware";
-import { reviewValidator } from "../validations/review.validator";
-import { idValidator } from "../validations/general.validator";
-import { expressValidator } from "../middlewares/express.validator.middleware";
 import { validatorBody } from "../middlewares/zod.validator.middleware";
-import { ReviewAddDto } from "../dto/review.dto";
+import { expressValidator } from "../middlewares/express.validator.middleware";
+import {
+  CouponAddDto,
+  CouponApplyDto,
+  CouponUpdateDto,
+} from "../dto/coupon.dto";
+import {
+  couponValidator,
+  couponApplyValidator,
+  couponUpdateValidator,
+} from "../validations/coupon.validator";
+import { idValidator } from "../validations/general.validator";
 
-const controller = ReviewController.getInstance();
+const controller = CouponController.getInstance();
 const router = express.Router();
 
-// Count all reviews by sellerId [ Seller ]  ||
-// Count reviews to specific item by sellerId and itemId [ Seller ]
+// Count coupon
 router.get(
   "/count",
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   async (req: Request, res: Response) => {
-    await controller.countReview(req, res);
+    await controller.countCoupon(req, res);
   }
 );
 
-// Get average
-// Allow both userId and itemId as optional parameters
-router.get(
-  "/average-rate",
-  AuthenticationMiddleware.refreshToken,
-  AuthenticationMiddleware.verifyIdToken,
-  AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
-  async (req: Request, res: Response) => {
-    await controller.getReviewAverage(req, res);
-  }
-);
-
-// Add review [ Buyer ]
+// Add coupon
 router.post(
-  "/add/:id",
+  "/add",
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
-  idValidator,
+  couponValidator,
   expressValidator,
-  validatorBody(ReviewAddDto),
+  validatorBody(CouponAddDto),
   async (req: Request, res: Response) => {
-    await controller.addReview(req, res);
+    await controller.addCoupon(req, res);
   }
 );
 
-// Update review by buyerId [ Buyer ]
+// Update coupon
+router.post(
+  "/apply",
+  AuthenticationMiddleware.refreshToken,
+  AuthenticationMiddleware.verifyIdToken,
+  AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
+  couponApplyValidator,
+  expressValidator,
+  validatorBody(CouponApplyDto),
+  async (req: Request, res: Response) => {
+    await controller.applyCoupon(req, res);
+  }
+);
+
+// Update coupon
 router.put(
-  "/update/:id",
+  "/update",
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
-  reviewValidator,
-  idValidator,
+  couponUpdateValidator,
   expressValidator,
-  validatorBody(ReviewAddDto),
+  validatorBody(CouponUpdateDto),
   async (req: Request, res: Response) => {
-    await controller.updateReview(req, res);
+    await controller.updateCoupon(req, res);
   }
 );
 
-// Delete review by buyerId  [ Buyer ]
+// Delete coupon
 router.delete(
-  "/delete",
+  "/delete/:id",
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   idValidator,
   expressValidator,
   async (req: Request, res: Response) => {
-    await controller.deleteReview(req, res);
+    await controller.deleteCoupon(req, res);
   }
 );
 
-// Get Review by reviewId and userId [ Seller ]
+// Get coupon
 router.get(
-  "/get",
+  "/get/:id",
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
   idValidator,
   expressValidator,
   async (req: Request, res: Response) => {
-    await controller.getReview(req, res);
+    await controller.getCoupon(req, res);
   }
 );
 
-// Get all review by reviewId and sellerId [ Seller ]
+// Get all coupon
 router.get(
   "/get-all",
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
-  AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
+  AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
   async (req: Request, res: Response) => {
-    await controller.getAllReview(req, res);
+    await controller.getAllCoupon(req, res);
   }
 );
 

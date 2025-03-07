@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import ConversationService from "../services/conversationService";
+import ConversationService from "../services/conversation.service";
 
 class ConversationController {
   private static Instance: ConversationController;

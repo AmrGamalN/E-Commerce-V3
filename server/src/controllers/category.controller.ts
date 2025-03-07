@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import Categorieservice from "../services/categoryService";
+import Categorieservice from "../services/category.service";
 
 class CategoryController {
   private static Instance: CategoryController;
@@ -47,7 +47,6 @@ class CategoryController {
   async getCategory(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-
       const retrievedCategory = await this.serviceInstance.getCategory(
         String(id)
       );

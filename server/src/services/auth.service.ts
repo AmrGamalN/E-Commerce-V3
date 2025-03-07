@@ -2,7 +2,7 @@ import { UserDto } from "../dto/user.dto";
 import User from "../models/mongodb/user.model";
 import { auth } from "../config/firebaseConfig";
 import { client } from "../config/redisConfig";
-import { sendVerificationEmail } from "../utils/emailUtil";
+import { sendVerificationEmail } from "../utils/sendEmail";
 import { RegisterDtoType } from "../dto/auth.dto";
 import { UserDtoType } from "../dto/user.dto";
 import moment from "moment-timezone";

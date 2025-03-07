@@ -1,18 +1,16 @@
 import { Request, Response } from "express";
 import axios from "axios";
 import bcrypt from "bcrypt";
-import { generateToken } from "../utils/generateToken";
+import { generateToken } from "../utils/generateToken.utils";
 import {
   auth,
   authentication,
   signInWithEmailAndPassword,
 } from "../config/firebaseConfig";
-import { date, ZodError } from "zod";
-import AuthService from "../services/authService";
+import {ZodError } from "zod";
+import AuthService from "../services/auth.service";
 import dotenv from "dotenv";
 import User from "../models/mongodb/user.model";
-import { error } from "console";
-import { check } from "express-validator";
 import { UserDtoType } from "../dto/user.dto";
 
 dotenv.config();

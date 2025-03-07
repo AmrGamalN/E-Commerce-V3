@@ -1,102 +1,105 @@
 import express, { Request, Response } from "express";
-import ReviewController from "../controllers/review.controller";
+import OrderController from "../controllers/order.controller";
 import AuthenticationMiddleware from "../middlewares/auth.middleware";
-import { reviewValidator } from "../validations/review.validator";
-import { idValidator } from "../validations/general.validator";
-import { expressValidator } from "../middlewares/express.validator.middleware";
 import { validatorBody } from "../middlewares/zod.validator.middleware";
-import { ReviewAddDto } from "../dto/review.dto";
+import { expressValidator } from "../middlewares/express.validator.middleware";
+import { OrderAddDto, OrderUpdateDto } from "../dto/order.dto";
+import {
+  orderValidator,
+  orderUpdateValidator,
+  orderStatusValidator,
+} from "../validations/order.validator";
+import { idValidator } from "../validations/general.validator";
 
-const controller = ReviewController.getInstance();
+const controller = OrderController.getInstance();
 const router = express.Router();
 
-// Count all reviews by sellerId [ Seller ]  ||
-// Count reviews to specific item by sellerId and itemId [ Seller ]
+// Count order for seller
 router.get(
   "/count",
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   async (req: Request, res: Response) => {
-    await controller.countReview(req, res);
+    await controller.countOrder(req, res);
   }
 );
 
-// Get average
-// Allow both userId and itemId as optional parameters
-router.get(
-  "/average-rate",
-  AuthenticationMiddleware.refreshToken,
-  AuthenticationMiddleware.verifyIdToken,
-  AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
-  async (req: Request, res: Response) => {
-    await controller.getReviewAverage(req, res);
-  }
-);
-
-// Add review [ Buyer ]
+// Add order
 router.post(
-  "/add/:id",
+  "/add",
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
-  idValidator,
+  orderValidator,
   expressValidator,
-  validatorBody(ReviewAddDto),
+  validatorBody(OrderAddDto),
   async (req: Request, res: Response) => {
-    await controller.addReview(req, res);
+    await controller.addOrder(req, res);
   }
 );
 
-// Update review by buyerId [ Buyer ]
+// Update order
 router.put(
-  "/update/:id",
+  "/update",
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
-  reviewValidator,
-  idValidator,
+  orderUpdateValidator,
   expressValidator,
-  validatorBody(ReviewAddDto),
+  validatorBody(OrderUpdateDto),
   async (req: Request, res: Response) => {
-    await controller.updateReview(req, res);
+    await controller.updateOrder(req, res);
   }
 );
 
-// Delete review by buyerId  [ Buyer ]
+// Update order status
+router.put(
+  "/update/status",
+  AuthenticationMiddleware.refreshToken,
+  AuthenticationMiddleware.verifyIdToken,
+  AuthenticationMiddleware.allowTo(["ADMIN", "MANAGER"]),
+  orderStatusValidator,
+  expressValidator,
+  async (req: Request, res: Response) => {
+    await controller.updateOrderStatus(req, res);
+  }
+);
+
+// Delete order
 router.delete(
-  "/delete",
+  "/delete/:id",
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   idValidator,
   expressValidator,
   async (req: Request, res: Response) => {
-    await controller.deleteReview(req, res);
+    await controller.deleteOrder(req, res);
   }
 );
 
-// Get Review by reviewId and userId [ Seller ]
+// Get order
 router.get(
-  "/get",
+  "/get/:id",
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
   idValidator,
   expressValidator,
   async (req: Request, res: Response) => {
-    await controller.getReview(req, res);
+    await controller.getOrder(req, res);
   }
 );
 
-// Get all review by reviewId and sellerId [ Seller ]
+// Get all order
 router.get(
   "/get-all",
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
-  AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
+  AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
   async (req: Request, res: Response) => {
-    await controller.getAllReview(req, res);
+    await controller.getAllOrder(req, res);
   }
 );
 

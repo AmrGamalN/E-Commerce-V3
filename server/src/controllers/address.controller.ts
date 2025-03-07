@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import AddressService from "../services/addressService";
+import AddressService from "../services/address.service";
 
 class AddressController {
   private static Instance: AddressController;
@@ -49,7 +49,7 @@ class AddressController {
   async getAddress(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const userId = req.user?.user_id;
+      const userId = req.body.userId ? req.body.userId : req.user?.user_id;
       const retrievedAddress = await this.serviceInstance.getAddress(
         String(id),
         userId
@@ -69,7 +69,7 @@ class AddressController {
   // Get all address
   async getAllAddress(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user?.user_id;
+      const userId = req.body.userId ? req.body.userId : req.user?.user_id;
       const retrievedAddress = await this.serviceInstance.getAllAddress(userId);
       const count = await this.serviceInstance.countAddress();
       if (retrievedAddress.length == 0) {

@@ -1,4 +1,4 @@
-import { check, validationResult } from "express-validator";
+import { check } from "express-validator";
 
 export const idValidator = [
   check("id")
@@ -6,9 +6,7 @@ export const idValidator = [
     .notEmpty()
     .withMessage("ID IS REQUIRED")
     .isMongoId()
-    .withMessage("INVALID MONGODB ID")
-    .custom((value) => /^[a-fA-F0-9]{24}$/.test(value))
-    .withMessage("Invalid MongoDB ID format"),
+    .withMessage("INVALID MONGODB ID"),
 
   check("itemId")
     .trim()
@@ -17,7 +15,7 @@ export const idValidator = [
     .isMongoId()
     .withMessage("INVALID MONGODB ID")
     .optional(),
-  
+
   check("reviewId")
     .trim()
     .notEmpty()
@@ -25,7 +23,7 @@ export const idValidator = [
     .isMongoId()
     .withMessage("INVALID MONGODB ID")
     .optional(),
-  
+
   check("userId")
     .trim()
     .notEmpty()

@@ -18,6 +18,13 @@ export const itemValidator = [
     .matches(/^[a-zA-Z]+$/)
     .withMessage("MUST CONTAIN ONLY LETTERS"),
 
+  check("nestedSubCategory")
+    .trim()
+    .customSanitizer((value) => value.toLowerCase())
+    .matches(/^[a-zA-Z]+$/)
+    .withMessage("MUST CONTAIN ONLY LETTERS")
+    .optional(),
+
   check("brand")
     .trim()
     .notEmpty()
@@ -29,7 +36,7 @@ export const itemValidator = [
   check("communications")
     .trim()
     .isArray({ min: 1 })
-    .withMessage("PAYMENT OPTIONS MUST BE AN ARRAY")
+    .withMessage("COMMUNICATION MUST BE AN ARRAY")
     .matches(/^(phone|chat)$/)
     .withMessage("COMMUNICATIONS MUST CONTAIN ONLY 'phone' OR 'chat'"),
   checkArray(
@@ -41,7 +48,7 @@ export const itemValidator = [
     .trim()
     .notEmpty()
     .withMessage("TITLE IS REQUIRED")
-    .matches(/^[a-zA-Z]+$/)
+    .matches(/^[a-zA-Z-0-9 ]+$/)
     .withMessage("MUST CONTAIN ONLY LETTERS")
     .isLength({ min: 2, max: 20 })
     .withMessage("CITY MUST BE BETWEEN 2 AND 50 CHARACTERS."),
@@ -50,7 +57,7 @@ export const itemValidator = [
     .trim()
     .notEmpty()
     .withMessage("DESCRIPTION IS REQUIRED")
-    .matches(/^[a-zA-Z-0-9]+$/)
+    .matches(/^[a-zA-Z-0-9 ]+$/)
     .withMessage("MUST CONTAIN ONLY LETTERS and NUMBER")
     .isLength({ min: 2, max: 150 })
     .withMessage("CITY MUST BE BETWEEN 2 AND 150 CHARACTERS."),
@@ -69,7 +76,7 @@ export const itemValidator = [
     .optional()
     .isArray({ min: 1 })
     .withMessage("PAYMENT OPTIONS MUST BE AN ARRAY")
-    .matches(/^[A-Z]+$/)
+    .matches(/^(cash|credit card|meeza|fawry|visa|we pay|paymob)$/)
     .withMessage("MUST CONTAIN ONLY LETTERS"),
   checkArray(
     "paymentOptions",
@@ -107,14 +114,22 @@ export const itemValidator = [
     .withMessage("MUST CONTAIN ONLY LETTERS AND NUMBER")
     .isLength({ min: 2, max: 10 })
     .withMessage("SIZE MUST BE BETWEEN 2 AND 10 CHARACTERS."),
-  
+
+  check("material")
+    .optional()
+    .trim()
+    .matches(/^[a-zA-Z]+$/)
+    .withMessage("MUST CONTAIN ONLY LETTERS AND NUMBER")
+    .isLength({ min: 3, max: 20 })
+    .withMessage("MATERIAL MUST BE BETWEEN 2 AND 10 CHARACTERS."),
+
   check("color")
     .optional()
     .trim()
     .matches(/^[a-zA-Z]+$/)
     .withMessage("MUST CONTAIN ONLY LETTERS")
-    .isLength({ min: 2, max: 15 })
-    .withMessage("COLOR MUST BE BETWEEN 2 AND 10 CHARACTERS."),
+    .isLength({ min: 3, max: 20 })
+    .withMessage("COLOR MUST BE BETWEEN 2 AND 20 CHARACTERS."),
 
   check("price")
     .notEmpty()
@@ -122,13 +137,17 @@ export const itemValidator = [
     .isInt({ min: 1 })
     .withMessage("PRICE MUST BE A NUMBER"),
 
+  check("allowQuantity")
+    .isInt({ min: 1, max: 10 })
+    .withMessage("ALLOW QUANTITY MUST BE A NUMBER")
+    .optional(),
+
   check("discount")
-    .optional()
     .isInt()
     .withMessage("DISCOUNT MUST BE A NUMBER")
-    .default(0),
+    .default(0)
+    .optional(),
 
-  check("isDiscount").optional().isBoolean().toBoolean(),
   check("isSavedForLater").optional().isBoolean().toBoolean(),
   check("allowNegotiate").optional().isBoolean().toBoolean(),
   check("promotion").optional().isBoolean().toBoolean(),

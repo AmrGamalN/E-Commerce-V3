@@ -11,7 +11,7 @@ import { validatorBody } from "../middlewares/zod.validator.middleware";
 import { expressValidator } from "../middlewares/express.validator.middleware";
 import { RegisterDto, LoginDto } from "../dto/auth.dto";
 import AuthenticationMiddleware from "../middlewares/auth.middleware";
-import { TwoFactorAuthController } from "../middlewares/twoFactorAuthentication";
+import { TwoFactorAuthController } from "../utils/twoFactorAuthentication";
 const controller = AuthController.getInstance();
 const router = express.Router();
 

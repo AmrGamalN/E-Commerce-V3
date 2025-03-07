@@ -63,19 +63,11 @@ export const itemParser = (req: Request, res: Response, next: NextFunction) => {
   req.body.communications = req.body.communications.split(",");
   req.body.paymentOptions = req.body.paymentOptions.split(",");
   req.body.price = Number(req.body.price);
+  req.body.allowQuantity = Number(req.body.allowQuantity);
   req.body.discount = Number(req.body.discount);
   req.body.avgRating = Number(req.body.avgRating);
-  req.body.isDiscount = req.body.isDiscount === "true";
   req.body.isSavedForLater = req.body.isSavedForLater === "true";
   req.body.allowNegotiate = req.body.isSavedForLater === "true";
   next();
 };
 
-export const reviewParser = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  req.body.rate = Number(req.body.rate);
-  next();
-};

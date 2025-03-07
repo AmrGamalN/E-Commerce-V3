@@ -7,7 +7,6 @@ export const messageValidator = [
     .withMessage("CONVERSATION ID IS REQUIRED")
     .isMongoId()
     .withMessage("INVALID MONGODB ID")
-    .custom((value) => /^[a-fA-F0-9]{24}$/.test(value))
     .withMessage("Invalid MongoDB ID format"),
 
   check("senderId")
@@ -16,7 +15,6 @@ export const messageValidator = [
     .withMessage("CONVERSATION ID IS REQUIRED")
     .isMongoId()
     .withMessage("INVALID MONGODB ID")
-    .custom((value) => /^[a-fA-F0-9]{24}$/.test(value))
     .withMessage("Invalid MongoDB ID format"),
 
   check("receiverId")
@@ -25,7 +23,6 @@ export const messageValidator = [
     .withMessage("CONVERSATION ID IS REQUIRED")
     .isMongoId()
     .withMessage("INVALID MONGODB ID")
-    .custom((value) => /^[a-fA-F0-9]{24}$/.test(value))
     .withMessage("Invalid MongoDB ID format"),
 
   check("messageType")
