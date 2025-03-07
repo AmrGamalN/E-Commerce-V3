@@ -1,11 +1,18 @@
 import { z } from "zod";
 
 export const ItemDto = z.object({
+  // ItemClassification
   _id: z.string().optional(),
-  userId: z.string(),
+
   category: z.string(),
   subcategory: z.string(),
+  nestedSubCategory: z.string().optional(),
   brand: z.string(),
+  categoryId: z.string().optional(),
+  subCategoryId: z.string().optional(),
+  type: z.string().optional(),
+
+  // ItemDetails
   itemImages: z
     .array(
       z.object({
@@ -15,40 +22,50 @@ export const ItemDto = z.object({
       })
     )
     .default([]),
-  communications: z.array(z.string()).default([]),
   title: z.string(),
   description: z.string(),
   condition: z.enum(["NEW", "OLD", "USE"]).default("NEW"),
   STATE: z
     .enum(["UNDER_REVIEW", "PUBLISHED", "SOLD", "REJECT"])
     .default("UNDER_REVIEW"),
-  paymentOptions: z.array(z.string()).default([]),
-  location: z.string(),
-  phone: z.string(),
-  categoryId: z.string().optional(),
-  subCategoryId: z.string().optional(),
-  type: z.string().optional(),
+  price: z.number().positive(),
+  allowQuantity: z.number().default(1),
+  availableQuantity: z.number().default(1),
   size: z.string().optional(),
   color: z.string().optional(),
-  price: z.number(),
-  discount: z.number().default(0).optional(),
+  material: z.string().optional(),
+  discount: z.number().min(0).max(100).optional(),
   isDiscount: z.boolean().optional().default(false).optional(),
   isSavedForLater: z.boolean().default(false),
   allowNegotiate: z.boolean().default(false),
   isFirstItem: z.boolean().default(true),
-  isHighlighted: z.boolean().default(false),
-  promotion: z.boolean().default(false),
+  couponId: z.string().optional(),
+
+  // UserDetails
+  userId: z.string(),
+  communications: z.array(z.string()).default([]),
+  paymentOptions: z.array(z.string()).default([]),
+  location: z.string(),
+  phone: z.string(),
+
+  // ItemReview
   reviewId: z.array(z.string()).default([]),
   rate: z.object({
     avgRating: z.number(),
     rating: z.array(z.number()).default([0, 0, 0, 0, 0]),
     totalReviews: z.number(),
   }),
+
+  // Offer
+  coupons: z.string().optional(),
+  isHighlighted: z.boolean().default(false),
+  promotion: z.boolean().default(false),
 });
 
 export const ItemAddDto = z.object({
   category: z.string(),
   subcategory: z.string(),
+  nestedSubCategory: z.string().optional(),
   brand: z.string(),
   type: z.string().optional(),
   itemImages: z
@@ -68,12 +85,14 @@ export const ItemAddDto = z.object({
   location: z.string(),
   phone: z.string(),
   size: z.string().optional(),
+  material: z.string().optional(),
+  allowQuantity: z.number().optional(),
   color: z.string().optional(),
   price: z.number().optional(),
-  discount: z.number().default(0).optional(),
-  isDiscount: z.boolean().optional().default(false).optional(),
+  discount: z.number().min(0).max(100).optional(),
   isSavedForLater: z.boolean().default(false),
   allowNegotiate: z.boolean().default(false),
+  coupons: z.string().optional(),
 });
 
 export type ItemAddDtoType = z.infer<typeof ItemAddDto>;

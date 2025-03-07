@@ -1,7 +1,7 @@
 import { auth } from "../config/firebaseConfig";
-import UserService from "../services/userService";
+import UserService from "../services/user.service";
 import { Request, Response } from "express";
-import { sendVerificationEmail } from "../utils/emailUtil";
+import { sendVerificationEmail } from "../utils/sendEmail";
 
 class UserController {
   private static instance: UserController;
@@ -31,10 +31,10 @@ class UserController {
 
   async getUser(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user?.user_id;
+      const userId = req.body.userId ? req.body.userId : req.user?.user_id;
       const retrievedUser = await this.serviceInstance.getUser(userId);
       if (retrievedUser == null) {
-        res.status(404).json({ message: "Not found user", data: [] });
+        res.status(200).json({ message: "Not found user", data: [] });
         return;
       }
       res
@@ -45,6 +45,7 @@ class UserController {
     }
   }
 
+  // Used to get all admin or users or all users and admin in database
   async getAllUser(req: Request, res: Response): Promise<void> {
     const { role } = req.body;
     try {
@@ -87,19 +88,19 @@ class UserController {
         userId,
         req.body
       );
-      if (retrievedUser == null) {
+      if (retrievedUser == 0) {
         res.status(404).json({ message: "Not found user", data: [] });
         return;
       }
       res.status(200).json({
         message: "User updated Successfully",
-        data: retrievedUser,
       });
     } catch (error) {
       this.handleError(res, "Failed to update user!", error);
     }
   }
 
+  // Used to count all admin or users or all users and admin in database
   async countUser(req: Request, res: Response): Promise<void> {
     const { role } = req.body;
     try {

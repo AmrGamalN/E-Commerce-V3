@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import NotificationService from "../services/notificationService";
+import NotificationService from "../services/notification.service";
 import { title } from "process";
 
 class NotificationController {
@@ -31,8 +31,7 @@ class NotificationController {
   // Store Fcm token
   async storeFcmToken(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user?.user_id;
-      console.log(userId);
+      const userId = req.body.userId ? req.body.userId : req.user?.user_id;
       const { fcmToken } = req.body;
       const retrievedToken = await this.serviceInstance.storeFcmToken(
         fcmToken,
@@ -53,10 +52,8 @@ class NotificationController {
   // Add Notification
   async sendNotification(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user?.user_id;
+      const userId = req.body.userId ? req.body.userId : req.user?.user_id;
       const { title, body } = req.body;
-      console.log(title);
-      console.log(body);
       const retrievedNotification = await this.serviceInstance.sendNotification(
         userId,
         title,

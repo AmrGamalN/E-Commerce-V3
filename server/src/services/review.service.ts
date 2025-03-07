@@ -79,7 +79,6 @@ class ReviewService {
         throw new Error("Review not found");
       }
       const parsed = ReviewDto.safeParse(retrievedReview);
-
       if (!parsed.success) {
         throw new Error("Invalid review data");
       }

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import MessageService from "../services/messageService";
+import MessageService from "../services/message.service";
 import { Server } from "socket.io";
 import { getSocketInstance, users } from "../config/socket.io";
 
@@ -57,7 +57,7 @@ class MessageController {
   // Get all message
   async getAllMessage(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user?.user_id;
+      const userId = req.body.userId ? req.body.userId : req.user?.user_id;
       const { id } = req.params;
       const { lastMessageDate } = req.body;
       const retrievedMessage = await this.serviceInstance.getAllMessage(
@@ -83,9 +83,8 @@ class MessageController {
   // Search message
   async searchMessage(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user?.user_id;
+      const userId = req.body.userId ? req.body.userId : req.user?.user_id;
       const { id, textSearch, page } = req.body;
-
       const retrievedMessage = await this.serviceInstance.searchMessage(
         userId,
         String(id),

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import FollowService from "../services/followService";
+import FollowService from "../services/follow.service";
 
 class FollowController {
   private static Instance: FollowController;
@@ -48,7 +48,7 @@ class FollowController {
   async getFollow(req: Request, res: Response): Promise<void> {
     try {
       const { typeFollow } = req.body;
-      const userId = req.user?.user_id;
+      const userId = req.body.userId ? req.body.userId : req.user?.user_id;
       const followId = req.params.id;
       const retrievedFollow = await this.serviceInstance.getFollow(
         userId,
@@ -72,7 +72,7 @@ class FollowController {
   async getAllFollow(req: Request, res: Response): Promise<void> {
     const { typeFollow } = req.body;
     try {
-      const userId = req.user?.user_id;
+      const userId = req.body.userId ? req.body.userId : req.user?.user_id;
       const { page } = req.query;
       const retrievedFollow = await this.serviceInstance.getAllFollow(
         userId,
@@ -85,10 +85,12 @@ class FollowController {
         res.status(200).json({ message: `Not found ${typeFollow}`, data: [] });
         return;
       }
+
       const totalPages = Math.ceil(count / 10);
       const remainPages = totalPages - Number(page);
       const totalFollow =
         typeFollow === "follower" ? "totalFollower" : "totalFollowing";
+      
       res.status(200).json({
         message: `get ${typeFollow} successfully`,
         followInfo: {
@@ -110,7 +112,7 @@ class FollowController {
     const { typeFollow } = req.body;
     try {
       const followId = req.params.id;
-      const userId = req.user?.user_id;
+      const userId = req.body.userId ? req.body.userId : req.user?.user_id;
       const retrievedFollow = await this.serviceInstance.deleteFollow(
         userId,
         String(typeFollow),
@@ -132,7 +134,7 @@ class FollowController {
   async countFollow(req: Request, res: Response): Promise<void> {
     const { typeFollow } = req.body;
     try {
-      const userId = req.user?.user_id;
+      const userId = req.body.userId ? req.body.userId : req.user?.user_id;
       const count = await this.serviceInstance.countFollow(userId, typeFollow);
       if (count == 0) {
         res.status(404).json({ message: `Not found ${typeFollow}`, data: 0 });
@@ -150,7 +152,7 @@ class FollowController {
   // Search for a follow
   async searchFollow(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user?.user_id;
+      const userId = req.body.userId ? req.body.userId : req.user?.user_id;
       const { name, typeFollow } = req.body;
       const { page } = req.query;
       const result = await this.serviceInstance.searchFollow(
@@ -160,7 +162,7 @@ class FollowController {
         Number(page)
       );
 
-      if (result.length==0) {
+      if (result.length == 0) {
         res.status(404).json({ message: `Not found ${typeFollow}`, data: [] });
         return;
       }

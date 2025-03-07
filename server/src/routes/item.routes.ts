@@ -12,9 +12,15 @@ const controller = ItemController.getInstance();
 const router = express.Router();
 
 // Count items
-router.get("/count", async (req: Request, res: Response) => {
-  await controller.countItems(req, res);
-});
+router.get(
+  "/count",
+  AuthenticationMiddleware.refreshToken,
+  AuthenticationMiddleware.verifyIdToken,
+  AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
+  async (req: Request, res: Response) => {
+    await controller.countItems(req, res);
+  }
+);
 
 // Add item
 router.post(

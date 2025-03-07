@@ -7,7 +7,6 @@ export const reportValidator = [
     .withMessage("ID IS REQUIRED")
     .isMongoId()
     .withMessage("INVALID MONGODB ID")
-    .custom((value) => /^[a-fA-F0-9]{24}$/.test(value))
     .withMessage("Invalid MongoDB ID format"),
 
   check("reason")
@@ -44,7 +43,6 @@ export const reportFeedBackValidator = [
     .withMessage("ID IS REQUIRED")
     .isMongoId()
     .withMessage("INVALID MONGODB ID")
-    .custom((value) => /^[a-fA-F0-9]{24}$/.test(value))
     .withMessage("Invalid MongoDB ID format"),
 
   check("message")
@@ -72,7 +70,6 @@ export const reportUpdateValidator = [
     .withMessage("ID IS REQUIRED")
     .isMongoId()
     .withMessage("INVALID MONGODB ID")
-    .custom((value) => /^[a-fA-F0-9]{24}$/.test(value))
     .withMessage("Invalid MongoDB ID format"),
 
   check("reason")

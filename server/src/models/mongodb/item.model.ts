@@ -7,13 +7,24 @@ const COMMUNICATION = ["PHONE", "CHAT"];
 
 const ItemSchema: Schema = new Schema(
   {
-    userId: {
-      type: String,
-      required: true,
-    },
+    // ItemClassification
     category: { type: String, required: true, trim: true },
     subcategory: { type: String, required: true, trim: true },
+    nestedSubCategory: { type: String, required: false, trim: true }, // Used with clothes - accessories category ....
     brand: { type: String, required: true, trim: true },
+    type: { type: String, optional: true },
+    categoryId: { type: String, optional: true },
+    subCategoryId: { type: String, optional: true },
+
+    // ItemDetails
+    title: { type: String, required: true },
+    description: { type: String, required: true },
+    condition: {
+      type: String,
+      required: true,
+      enum: CONDITION,
+      default: "NEW",
+    },
     itemImages: [
       {
         imageUrl: String,
@@ -24,15 +35,33 @@ const ItemSchema: Schema = new Schema(
         },
       },
     ],
-    communications: [],
-    title: { type: String, required: true },
-    description: { type: String, required: true },
-    condition: {
+    size: { type: String, optional: true },
+    color: { type: String, optional: true },
+    material: { type: String, optional: true },
+    price: { type: Number, required: true },
+    discount: {
+      type: Number,
+      required: true,
+      min: 0,
+      max: 100,
+      optional: true,
+    }, // Discount to all user
+    isDiscount: { type: Boolean, default: false, optional: true },
+    isSavedForLater: { type: Boolean, optional: true, default: false },
+    allowNegotiate: { type: Boolean, default: false },
+    isFirstItem: { type: Boolean, default: false },
+    isHighlighted: { type: Boolean, default: false }, // Used to advertisement
+    promotion: { type: Boolean, default: false },
+    availableQuantity: { type: Number, required: true, default: 1 }, // Number of quantity is available
+    allowQuantity: { type: Number, required: true, default: 1 }, // Used to allow quantity for the user who is purchasing.
+    couponId: { type: String, optional: true }, //  Discount to some target users
+
+    // UserDetails
+    userId: {
       type: String,
       required: true,
-      enum: CONDITION,
-      default: "NEW",
     },
+    communications: [],
     status: {
       type: String,
       required: true,
@@ -44,20 +73,9 @@ const ItemSchema: Schema = new Schema(
       default: [],
     },
     location: { type: String, required: true },
-    categoryId: { type: String, optional: true },
-    subCategoryId: { type: String, optional: true },
     phone: { type: String, optional: true },
-    type: { type: String, optional: true },
-    size: { type: String, optional: true },
-    color: { type: String, optional: true },
-    price: { type: Number, required: true },
-    discount: { type: Number, required: true, default: 0, optional: true },
-    isDiscount: { type: Boolean, default: false, optional: true },
-    isSavedForLater: { type: Boolean, optional: true, default: false },
-    allowNegotiate: { type: Boolean, default: false },
-    isFirstItem: { type: Boolean, default: false },
-    isHighlighted: { type: Boolean, default: false },
-    promotion: { type: Boolean, default: false },
+
+    // ItemReview
     reviewId: {
       type: [String],
       default: [],

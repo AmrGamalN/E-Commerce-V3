@@ -23,7 +23,12 @@ class ItemService {
       if (!parsed.success) {
         throw new Error("Invalid item data");
       }
-      const item = await Item.create({ ...parsed.data, userId });
+      const isDiscount = Number(data.discount) > 0 ? true : false;
+      const item = await Item.create({
+        ...parsed.data,
+        userId,
+        isDiscount: isDiscount,
+      });
       await item.save();
       return item;
     } catch (error) {
@@ -39,14 +44,14 @@ class ItemService {
       const retrievedItem = await Item.findOne({
         _id: itemId,
         userId: userId,
-      });
+      }).lean();
 
       if (retrievedItem?.userId == null) {
         throw new Error("Item not found");
       }
 
-      const { _id, ...itemData } = retrievedItem.toObject();
-      const parsed = ItemDto.safeParse(retrievedItem);
+      const { _id, ...itemData } = retrievedItem;
+      const parsed = ItemDto.safeParse(itemData);
       if (!parsed.success) {
         throw new Error("Invalid item data");
       }
@@ -66,10 +71,11 @@ class ItemService {
         userId: userId,
       })
         .skip(10 * (page - 1))
-        .limit(10);
+        .limit(10)
+        .lean();
 
       const itemDto = retrievedItem.map((item) => {
-        const { _id, ...items } = item.toObject();
+        const { _id, ...items } = item;
         const parsed = ItemDto.safeParse(items);
         if (!parsed.success) {
           throw new Error("Invalid item data");
@@ -96,6 +102,7 @@ class ItemService {
         throw new Error("Invalid item data");
       }
 
+      const isDiscount = Number(data.discount) > 0 ? true : false;
       const updatedItem = await Item.findOneAndUpdate(
         {
           _id: itemId,
@@ -103,6 +110,7 @@ class ItemService {
         },
         {
           $set: parsed.data,
+          isDiscount: isDiscount,
         },
         { new: true, runValidators: true }
       );
@@ -116,9 +124,9 @@ class ItemService {
   }
 
   // Count of Item
-  async countItems(): Promise<number> {
+  async countItems(userId: string): Promise<number> {
     try {
-      const count = await Item.countDocuments();
+      const count = await Item.countDocuments({ userId });
       return count;
     } catch (error) {
       throw new Error(

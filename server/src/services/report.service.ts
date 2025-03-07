@@ -1,7 +1,7 @@
 import Conversation from "../models/mongodb/conversation.model";
 import Item from "../models/mongodb/item.model";
 import { Report } from "../models/mongodb/report.model";
-import { sendVerificationEmail } from "../utils/emailUtil";
+import { sendVerificationEmail } from "../utils/sendEmail";
 import {
   ReportDtoType,
   ReportDto,

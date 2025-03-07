@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import ReportService from "../services/reportService";
+import ReportService from "../services/report.service";
 
 class ReportController {
   private static Instance: ReportController;
@@ -48,7 +48,7 @@ class ReportController {
   async getReport(req: Request, res: Response): Promise<void> {
     try {
       const reportId = req.params.id;
-      const userId = req.user?.user_id;
+      const userId = req.body.userId ? req.body.userId : req.user?.user_id;
       const retrievedReport = await this.serviceInstance.getReport(
         String(reportId),
         userId
@@ -69,7 +69,7 @@ class ReportController {
   // Update report
   async updateReport(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user?.user_id;
+      const userId = req.body.userId ? req.body.userId : req.user?.user_id;
       const retrievedReport = await this.serviceInstance.updateReport(
         userId,
         req.body
@@ -90,7 +90,7 @@ class ReportController {
   // Update report
   async feedBackReport(req: Request, res: Response): Promise<void> {
     try {
-      const adminId = req.user?.user_id;
+      const adminId = req.body.userId ? req.body.userId : req.user?.user_id;
       const feedBack = await this.serviceInstance.feedBackReport(
         req.body,
         adminId
@@ -109,7 +109,7 @@ class ReportController {
   async deleteReport(req: Request, res: Response): Promise<void> {
     try {
       const reportId = req.params.id;
-      const userId = req.user?.user_id;
+      const userId = req.body.userId ? req.body.userId : req.user?.user_id;
       const retrievedReport = await this.serviceInstance.deleteReport(
         String(reportId),
         userId
@@ -129,7 +129,7 @@ class ReportController {
   // Get all report
   async getAllReport(req: Request, res: Response): Promise<void> {
     try {
-      const userId = req.user?.user_id;
+      const userId = req.body.userId ? req.body.userId : req.user?.user_id;
       const retrievedReport = await this.serviceInstance.getAllReport(userId);
       if (retrievedReport.length == 0) {
         res.status(200).json({ message: "Not found Report", data: [] });
@@ -147,7 +147,7 @@ class ReportController {
   // Count of Report
   async countReport(req: Request, res: Response): Promise<void> {
     try {
-      const { userId } = req.body;
+      const userId = req.body.userId ? req.body.userId : req.user?.user_id;
       const count = await this.serviceInstance.countReport(String(userId));
       if (count == 0) {
         res.status(404).json({ message: "Not found Report", data: 0 });

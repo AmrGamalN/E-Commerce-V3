@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import ItemService from "../services/itemService";
+import ItemService from "../services/item.service";
 
 class ItemController {
   private static Instance: ItemController;
@@ -49,7 +49,7 @@ class ItemController {
   async getItem(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const userId = req.user?.user_id;
+      const userId = req.body.userId ? req.body.userId : req.user?.user_id;
       const retrievedItem = await this.serviceInstance.getItem(
         String(id),
         userId
@@ -70,12 +70,12 @@ class ItemController {
   async getAllItem(req: Request, res: Response): Promise<void> {
     try {
       const { page } = req.query;
-      const userId = req.user?.user_id;
+      const userId = req.body.userId ? req.body.userId : req.user?.user_id;
       const retrievedItems = await this.serviceInstance.getAllItem(
         userId,
         Number(page)
       );
-      const count = await this.serviceInstance.countItems();
+      const count = await this.serviceInstance.countItems(userId);
       if (retrievedItems.length == 0) {
         res.status(200).json({ message: "Not found Items", data: [] });
         return;
@@ -123,7 +123,8 @@ class ItemController {
   // Count of Item
   async countItems(req: Request, res: Response): Promise<void> {
     try {
-      const count = await this.serviceInstance.countItems();
+      const userId = req.body.userId ? req.body.userId : req.user?.user_id;
+      const count = await this.serviceInstance.countItems(userId);
       if (count == 0) {
         res.status(404).json({ message: "Not found Items", data: 0 });
         return;
@@ -141,7 +142,7 @@ class ItemController {
   async deleteItem(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const userId = req.user?.user_id;
+      const userId = req.body.userId ? req.body.userId : req.user?.user_id;
       const retrievedItem = await this.serviceInstance.deleteItem(
         String(id),
         userId

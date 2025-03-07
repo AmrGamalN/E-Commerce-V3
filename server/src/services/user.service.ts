@@ -19,12 +19,12 @@ class UserService {
   // Get user
   async getUser(userId: string): Promise<UserDtoType> {
     try {
-      const userRetrieved = await User.findOne({ userId: userId });
-      if (userRetrieved?.userId == null) {
+      const userRetrieved = await User.findOne({ userId }).lean();
+      if (!userRetrieved) {
         throw new Error("User not found");
       }
 
-      const { _id, ...userData } = userRetrieved?.toObject();
+      const { _id, ...userData } = userRetrieved;
       const parsed = UserDto.safeParse(userData);
       if (!parsed.success) {
         throw new Error("Invalid user data");
@@ -41,16 +41,16 @@ class UserService {
   async getAllUser(page: number, role: string): Promise<UserDtoType[]> {
     try {
       const query = role && role !== "undefined" ? { role } : {};
-      console.log(query);
       page = isNaN(page) || page < 1 ? 1 : page;
       const userRetrieved = await User.find(query)
+        .lean()
         .skip((page - 1) * 10)
         .limit(10);
 
-      console.log(userRetrieved);
       const userDto = userRetrieved.map((user) => {
-        const { _id, ...userData } = user.toObject();
+        const { _id, ...userData } = user;
         const parsed = UserDto.safeParse(userData);
+        console.log(parsed.error);
         if (!parsed.success) {
           throw new Error(`Invalid '${role ?? "users"} data`);
         }
@@ -81,27 +81,23 @@ class UserService {
   }
 
   // Update user
-  async updateUser(
-    userId: string,
-    data: UserUpdateDtoType
-  ): Promise<UserUpdateDtoType | null> {
+  async updateUser(userId: string, data: UserUpdateDtoType): Promise<number> {
     try {
       const parsed = UserUpdateDto.safeParse(data);
       if (!parsed.success) {
         throw new Error("Invalid item data");
       }
 
-      const updatedUser = await User.findOneAndUpdate(
+      const updatedUser = await User.updateOne(
         {
           userId: userId,
         },
         {
           $set: parsed.data,
-        },
-        { new: true, runValidators: true }
+        }
       );
 
-      return updatedUser ? updatedUser.toObject() : null;
+      return updatedUser.modifiedCount;
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error updating items"

@@ -5,7 +5,8 @@ export const reviewValidator = [
     .notEmpty()
     .withMessage("Rate is required")
     .isFloat({ min: 0, max: 5 })
-    .withMessage("Rate must be between 0 and 5"),
+    .withMessage("Rate must be between 0 and 5")
+    .toFloat(),
 
   body("description")
     .isString()
@@ -22,7 +23,8 @@ export const reviewValidator = [
     .withMessage("TITLE IS REQUIRED")
     .isIn(["bad", "average", "good", "very good", "excellent"])
     .withMessage(
-      "CONDITION MUST BE 'bad','Average','Good','very good','Excellent'")
+      "CONDITION MUST BE 'bad','Average','Good','very good','Excellent'"
+    )
     .matches(/^[a-zA-Z0-9]+$/)
     .withMessage("MUST CONTAIN ONLY LETTERS"),
 ];
