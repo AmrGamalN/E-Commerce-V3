@@ -7,6 +7,7 @@ import {
   MessageAddDto,
   MessageAddDtoType,
 } from "../dto/message.dto";
+import { formatDataAdd, formatDataGetAll } from "../utils/dataFormatter";
 const mongoose = require("mongoose");
 
 class MessageService {
@@ -24,11 +25,7 @@ class MessageService {
     buyerName: string
   ): Promise<MessageDtoType> {
     try {
-      const parsed = MessageDto.safeParse(data);
-      if (!parsed.success) {
-        throw new Error("Invalid message data");
-      }
-
+      const parsed = formatDataAdd(data, MessageDto);
       let conversation = await Conversation.findOne({
         participants: { $all: [data.senderId, data.receiverId] },
       });
@@ -85,7 +82,7 @@ class MessageService {
         await message.save();
       }
 
-      return parsed.data;
+      return parsed;
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error adding message"
@@ -101,7 +98,6 @@ class MessageService {
   ): Promise<MessageAddDtoType[]> {
     try {
       // const lastMessageDate = "2025-03-03T15:04:00.210+00:00";
-
       const query: any = {
         conversationId: new mongoose.Types.ObjectId(conversationId),
         $or: [{ senderId: userId }, { receiverId: userId }],
@@ -113,22 +109,10 @@ class MessageService {
 
       const retrievedMessages = await Message.find(query)
         .sort({ createdAt: -1 })
-        .limit(30);
+        .limit(30)
+        .lean();
 
-      const messageDto = retrievedMessages.map((message) => {
-        const { conversationId, ...messages } = message.toObject();
-
-        const parsed = MessageAddDto.safeParse({
-          ...messages,
-        });
-
-        if (!parsed.success) {
-          throw new Error("Invalid message data");
-        }
-        return { conversationId, ...parsed.data };
-      });
-
-      return messageDto;
+      return formatDataGetAll(retrievedMessages, MessageAddDto);
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error fetching message"

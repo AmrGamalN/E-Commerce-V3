@@ -1,11 +1,5 @@
 import { z } from "zod";
 
-export const ReportFeedBackDto = z.object({
-  modelId: z.string(),
-  message: z.string(),
-  status: z.enum(["PENDING", "REVIEWED", "RESOLVED"]).default("REVIEWED"),
-});
-
 // Define the dto for a report
 export const ReportDto = z.object({
   modelId: z.string(),
@@ -30,23 +24,24 @@ export const ReportDto = z.object({
     .optional(),
 });
 
-export const ReportAddDto = z.object({
-  modelId: z.string(), // Conversation or Item
-  subject: z.string(),
-  reportType: z.enum(["item", "conversation"]),
-  reason: z
-    .string()
-    .min(5, "Reason must be at least 5 characters")
-    .max(500, "Reason must not exceed 500 characters"),
+export const ReportFeedBackDto = ReportDto.pick({
+  modelId: true,
+  status: true,
+}).extend({
+  message: z.string(),
 });
 
-export const ReportUpdateDto = z.object({
-  modelId: z.string(), // Conversation or Item
-  subject: z.string(),
-  reason: z
-    .string()
-    .min(5, "Reason must be at least 5 characters")
-    .max(500, "Reason must not exceed 500 characters"),
+export const ReportAddDto = ReportDto.pick({
+  modelId: true, // Conversation or Item
+  subject: true,
+  reportType: true,
+  reason: true,
+});
+
+export const ReportUpdateDto = ReportDto.pick({
+  modelId: true, // Conversation or Item
+  subject: true,
+  reason: true,
 });
 
 export type ReportDtoType = z.infer<typeof ReportDto>;

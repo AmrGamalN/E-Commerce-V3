@@ -1,8 +1,9 @@
-import express, { Request, Response } from "express";
+import express from "express";
 import ConversationController from "../controllers/conversation.controller";
-import AuthenticationMiddleware from "../middlewares/auth.middleware";
-import { expressValidator } from "../middlewares/express.validator.middleware";
+import AuthenticationMiddleware from "../middlewares/authentication";
+import { expressValidator } from "../middlewares/expressValidator";
 import { idValidator } from "../validations/general.validator";
+import { asyncHandler } from "../middlewares/handleError";
 
 const controller = ConversationController.getInstance();
 const router = express.Router();
@@ -13,9 +14,7 @@ router.get(
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["ADMIN", "MANAGER"]),
-  async (req: Request, res: Response) => {
-    await controller.countConversation(req, res);
-  }
+  asyncHandler(controller.countConversation.bind(controller))
 );
 
 // Get conversation
@@ -26,9 +25,7 @@ router.get(
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
   idValidator,
   expressValidator,
-  async (req: Request, res: Response) => {
-    await controller.getConversation(req, res);
-  }
+  asyncHandler(controller.getConversation.bind(controller))
 );
 
 // Get all conversation
@@ -37,9 +34,7 @@ router.get(
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
-  async (req: Request, res: Response) => {
-    await controller.getAllConversation(req, res);
-  }
+  asyncHandler(controller.getAllConversation.bind(controller))
 );
 
 export default router;

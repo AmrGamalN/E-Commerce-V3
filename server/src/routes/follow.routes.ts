@@ -1,9 +1,10 @@
-import express, { Request, Response } from "express";
+import express from "express";
 import FollowController from "../controllers/follow.controller";
-import AuthenticationMiddleware from "../middlewares/auth.middleware";
-import { expressValidator } from "../middlewares/express.validator.middleware";
+import AuthenticationMiddleware from "../middlewares/authentication";
+import { expressValidator } from "../middlewares/expressValidator";
 import { idValidator } from "../validations/general.validator";
 import { followValidator } from "../validations/follow.validator";
+import { asyncHandler } from "../middlewares/handleError";
 
 const controller = FollowController.getInstance();
 const router = express.Router();
@@ -16,9 +17,7 @@ router.get(
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
   followValidator,
   expressValidator,
-  async (req: Request, res: Response) => {
-    await controller.countFollow(req, res);
-  }
+  asyncHandler(controller.countFollow.bind(controller))
 );
 
 // Count follow
@@ -29,9 +28,7 @@ router.get(
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
   followValidator,
   expressValidator,
-  async (req: Request, res: Response) => {
-    await controller.searchFollow(req, res);
-  }
+  asyncHandler(controller.searchFollow.bind(controller))
 );
 
 // Add follow
@@ -42,9 +39,7 @@ router.post(
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
   followValidator,
   expressValidator,
-  async (req: Request, res: Response) => {
-    await controller.addFollow(req, res);
-  }
+  asyncHandler(controller.addFollow.bind(controller))
 );
 
 // Delete follow
@@ -52,13 +47,11 @@ router.delete(
   "/delete/:id",
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
-  AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER","CALL_CENTER"]),
+  AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
   idValidator,
   followValidator,
   expressValidator,
-  async (req: Request, res: Response) => {
-    await controller.deleteFollow(req, res);
-  }
+  asyncHandler(controller.deleteFollow.bind(controller))
 );
 
 // Get follow
@@ -70,9 +63,7 @@ router.get(
   idValidator,
   followValidator,
   expressValidator,
-  async (req: Request, res: Response) => {
-    await controller.getFollow(req, res);
-  }
+  asyncHandler(controller.getFollow.bind(controller))
 );
 
 // Get all follow
@@ -81,9 +72,7 @@ router.get(
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
-  async (req: Request, res: Response) => {
-    await controller.getAllFollow(req, res);
-  }
+  asyncHandler(controller.getAllFollow.bind(controller))
 );
 
 export default router;

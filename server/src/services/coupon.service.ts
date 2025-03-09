@@ -1,5 +1,5 @@
 import Coupon from "../models/mongodb/coupon.model";
-import mongoose, { startSession } from "mongoose";
+import mongoose from "mongoose";
 import { generateSecretCode } from "../utils/generateSecretCode.utils";
 import {
   CouponDto,
@@ -13,10 +13,18 @@ import {
 } from "../dto/coupon.dto";
 import Item from "../models/mongodb/item.model";
 import Order from "../models/mongodb/order.model";
+import OrderService from "./order.service";
+import {
+  formatDataAdd,
+  formatDataGetAll,
+  formatDataGetOne,
+  formatDataUpdate,
+} from "../utils/dataFormatter";
 
 class CouponService {
   private static Instance: CouponService;
-  constructor() {}
+  constructor() {
+  }
   public static getInstance(): CouponService {
     if (!CouponService.Instance) {
       CouponService.Instance = new CouponService();
@@ -30,11 +38,7 @@ class CouponService {
     userId: string
   ): Promise<CouponAddDtoType> {
     try {
-      const parsed = CouponAddDto.safeParse(data);
-      if (!parsed.success) {
-        throw new Error("Invalid coupon data");
-      }
-
+      const parsed = formatDataAdd(data, CouponAddDto);
       const existingCoupon = await Coupon.exists({
         sellerId: userId,
         itemId: data.itemId,
@@ -51,10 +55,10 @@ class CouponService {
       } while (await Coupon.exists({ code: uniqueCode }));
 
       const coupon = await Coupon.create({
-        ...parsed.data,
+        ...parsed,
         sellerId: userId,
         code: uniqueCode,
-        remainingUses: parsed.data.maxUses, // In first remainingUses = maxUses
+        remainingUses: parsed.maxUses, // In first remainingUses = maxUses
       });
       await Item.updateOne(
         { _id: new mongoose.Types.ObjectId(data.itemId) },
@@ -71,22 +75,11 @@ class CouponService {
   // Get Coupon by couponId and userId
   async getCoupon(couponId: string, userId: string): Promise<CouponDtoType> {
     try {
-      const retrievedCoupon = await Coupon.findOne({
+      const retrievedCoupon = await Coupon.findById({
         _id: couponId,
         sellerId: userId,
       }).lean();
-
-      if (retrievedCoupon == null) {
-        throw new Error("Coupon not found");
-      }
-      const { _id, ...couponData } = retrievedCoupon;
-      const parsed = CouponDto.safeParse(couponData);
-      console.log(parsed.error);
-      if (!parsed.success) {
-        throw new Error("Invalid coupon data");
-      }
-      const coupon = { _id, ...parsed.data };
-      return coupon;
+      return formatDataGetOne(retrievedCoupon, CouponDto);
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error fetching coupon"
@@ -100,16 +93,7 @@ class CouponService {
       const retrievedCoupon = await Coupon.find({
         sellerId: userId,
       }).lean();
-
-      const couponDto = retrievedCoupon.map((coupons) => {
-        const { _id, ...coupon } = coupons;
-        const parsed = CouponDto.safeParse(coupon);
-        if (!parsed.success) {
-          throw new Error("Invalid coupons data");
-        }
-        return { _id, ...parsed.data };
-      });
-      return couponDto;
+      return formatDataGetAll(retrievedCoupon, CouponDto);
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error fetching coupons"
@@ -121,27 +105,19 @@ class CouponService {
   async updateCoupon(
     userId: string,
     data: CouponUpdateDtoType
-  ): Promise<object> {
+  ): Promise<number> {
     try {
-      const parsed = CouponUpdateDto.safeParse(data);
-      if (!parsed.success) {
-        throw new Error("Invalid coupon data");
-      }
-
+      const parsed = formatDataUpdate(data, CouponUpdateDto);
       const updatedCoupon = await Coupon.updateOne(
         {
           _id: new mongoose.Types.ObjectId(data.couponId),
           sellerId: userId,
         },
         {
-          $set: parsed.data,
+          $set: parsed,
         }
       );
-      if (updatedCoupon.matchedCount == 0) {
-        return { message: "coupon not found" };
-      }
-
-      return updatedCoupon;
+      return updatedCoupon.matchedCount;
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error updating coupon"
@@ -179,11 +155,7 @@ class CouponService {
   // Used by buyer
   async applyCoupon(data: CouponApplyDtoType, userId: string): Promise<object> {
     try {
-      const parsed = CouponApplyDto.safeParse(data);
-      if (!parsed.success) {
-        throw new Error("Invalid coupon data");
-      }
-
+      const parsed = formatDataAdd(data, CouponApplyDto);
       // Search for the coupon, making sure it matches the code and that it has not reached the maximum usage limit.
       const existingCoupon = await Coupon.findById({
         _id: new mongoose.Types.ObjectId(data.couponId),

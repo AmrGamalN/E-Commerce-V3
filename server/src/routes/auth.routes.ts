@@ -1,36 +1,30 @@
-import express, { Request, Response, NextFunction } from "express";
+import express from "express";
 import AuthController from "../controllers/auth.controller";
 import {
   loginValidator,
   registerValidator,
   OTPValidator,
 } from "../validations/auth.validator";
-import { uploadFile, upload } from "../middlewares/uploadFile.middleware";
-import { userRegisterParser } from "../middlewares/parser.middleware";
-import { validatorBody } from "../middlewares/zod.validator.middleware";
-import { expressValidator } from "../middlewares/express.validator.middleware";
-import { RegisterDto, LoginDto } from "../dto/auth.dto";
-import AuthenticationMiddleware from "../middlewares/auth.middleware";
+import { userUploadImage } from "../middlewares/uploadFile";
+import { extractUserImages } from "../middlewares/extractImages";
+import { validatorBody } from "../middlewares/zodValidator";
+import { expressValidator } from "../middlewares/expressValidator";
+import { RegisterDto, LoginEmailDto, LoginPhoneDto } from "../dto/auth.dto";
+import AuthenticationMiddleware from "../middlewares/authentication";
 import { TwoFactorAuthController } from "../utils/twoFactorAuthentication";
+import { asyncHandler } from "../middlewares/handleError";
 const controller = AuthController.getInstance();
 const router = express.Router();
 
 // Register user
 router.post(
   "/register",
-  uploadFile(
-    upload.fields([
-      { maxCount: 1, name: "profileImage" },
-      { maxCount: 1, name: "coverImage" },
-    ])
-  ),
-  userRegisterParser,
+  userUploadImage,
+  extractUserImages,
   registerValidator,
   expressValidator,
   validatorBody(RegisterDto),
-  async (req: Request, res: Response, next: NextFunction) => {
-    await controller.registerUser(req, res);
-  }
+  asyncHandler(controller.registerUser.bind(controller))
 );
 
 // Login user with email
@@ -38,10 +32,8 @@ router.post(
   "/login-email",
   loginValidator,
   expressValidator,
-  validatorBody(LoginDto),
-  async (req: Request, res: Response) => {
-    await controller.loginWithEmail(req, res);
-  }
+  validatorBody(LoginEmailDto),
+  asyncHandler(controller.loginWithEmail.bind(controller))
 );
 
 // Login user with phone
@@ -49,16 +41,15 @@ router.post(
   "/login-phone",
   loginValidator,
   expressValidator,
-  validatorBody(LoginDto),
-  async (req: Request, res: Response) => {
-    await controller.loginWithPhone(req, res);
-  }
+  validatorBody(LoginPhoneDto),
+  asyncHandler(controller.loginWithPhone.bind(controller))
 );
 
 // Verify email
-router.get("/verify-email", async (req: Request, res: Response) => {
-  await controller.verifyEmail(req, res);
-});
+router.get(
+  "/verify-email",
+  asyncHandler(controller.verifyEmail.bind(controller))
+);
 
 // refresh token
 router.post(
@@ -66,9 +57,7 @@ router.post(
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
-  async (req: Request, res: Response) => {
-    await controller.refreshToken(req, res);
-  }
+  asyncHandler(controller.refreshToken.bind(controller))
 );
 
 // Logout
@@ -77,9 +66,7 @@ router.post(
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
-  async (req: Request, res: Response) => {
-    await controller.logOut(req, res);
-  }
+  asyncHandler(controller.logOut.bind(controller))
 );
 
 router.post(
@@ -87,18 +74,18 @@ router.post(
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
-  async (req: Request, res: Response) => {
-    await TwoFactorAuthController.generateTwoFactorAuthentication(req, res);
-  }
+  asyncHandler(
+    TwoFactorAuthController.generateTwoFactorAuthentication.bind(controller)
+  )
 );
 
 router.post(
   "/verify-token",
   OTPValidator,
   expressValidator,
-  async (req: Request, res: Response) => {
-    await TwoFactorAuthController.VerifyTwoFactorAuthentication(req, res);
-  }
+  asyncHandler(
+    TwoFactorAuthController.VerifyTwoFactorAuthentication.bind(controller)
+  )
 );
 
 export default router;

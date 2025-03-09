@@ -1,6 +1,6 @@
 import { body } from "express-validator";
 
-export const reviewValidator = [
+export const reviewAddValidator = [
   body("rate")
     .notEmpty()
     .withMessage("Rate is required")

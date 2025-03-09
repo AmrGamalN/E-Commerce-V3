@@ -16,29 +16,27 @@ export const CouponDto = z.object({
   updatedAt: z.date(),
 });
 
-export const CouponAddDto = z.object({
-  discount: z.number().int().min(1).max(100),
-  maxUses: z.number().int().min(1),
-  itemId: z.string(),
-  expiresAt: z.date().default(() => new Date()),
+export const CouponAddDto = CouponDto.pick({
+  discount: true,
+  maxUses: true,
+  itemId: true,
+  expiresAt: true,
 });
 
-export const CouponUpdateDto = z.object({
-  discount: z.number().int().min(1).max(100),
-  maxUses: z.number().int().min(1),
+export const CouponUpdateDto = CouponDto.pick({
+  discount: true,
+  maxUses: true,
+  expiresAt: true,
+}).extend({
   couponId: z.string(),
-  expiresAt: z.date().default(() => new Date()),
 });
 
-export const CouponApplyDto = z.object({
+export const CouponApplyDto = CouponDto.pick({
+  code: true,
+}).extend({
   couponId: z.string(),
   orderId: z.string(),
-  code: z
-    .string()
-    .min(9)
-    .max(9)
-    .regex(/^[a-zA-Z0-9]+$/, "Invalid code format"),
-  quantity: z.number().min(1).max(10).positive(),
+  quantity: z.number(),
   price: z.number(),
 });
 

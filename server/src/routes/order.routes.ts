@@ -1,15 +1,16 @@
-import express, { Request, Response } from "express";
+import express from "express";
 import OrderController from "../controllers/order.controller";
-import AuthenticationMiddleware from "../middlewares/auth.middleware";
-import { validatorBody } from "../middlewares/zod.validator.middleware";
-import { expressValidator } from "../middlewares/express.validator.middleware";
+import AuthenticationMiddleware from "../middlewares/authentication";
+import { validatorBody } from "../middlewares/zodValidator";
+import { expressValidator } from "../middlewares/expressValidator";
 import { OrderAddDto, OrderUpdateDto } from "../dto/order.dto";
 import {
-  orderValidator,
+  orderAddValidator,
   orderUpdateValidator,
   orderStatusValidator,
 } from "../validations/order.validator";
 import { idValidator } from "../validations/general.validator";
+import { asyncHandler } from "../middlewares/handleError";
 
 const controller = OrderController.getInstance();
 const router = express.Router();
@@ -20,9 +21,7 @@ router.get(
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
-  async (req: Request, res: Response) => {
-    await controller.countOrder(req, res);
-  }
+  asyncHandler(controller.countOrder.bind(controller))
 );
 
 // Add order
@@ -31,12 +30,10 @@ router.post(
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
-  orderValidator,
+  orderAddValidator,
   expressValidator,
   validatorBody(OrderAddDto),
-  async (req: Request, res: Response) => {
-    await controller.addOrder(req, res);
-  }
+  asyncHandler(controller.addOrder.bind(controller))
 );
 
 // Update order
@@ -48,9 +45,7 @@ router.put(
   orderUpdateValidator,
   expressValidator,
   validatorBody(OrderUpdateDto),
-  async (req: Request, res: Response) => {
-    await controller.updateOrder(req, res);
-  }
+  asyncHandler(controller.updateOrder.bind(controller))
 );
 
 // Update order status
@@ -61,9 +56,7 @@ router.put(
   AuthenticationMiddleware.allowTo(["ADMIN", "MANAGER"]),
   orderStatusValidator,
   expressValidator,
-  async (req: Request, res: Response) => {
-    await controller.updateOrderStatus(req, res);
-  }
+  asyncHandler(controller.updateOrderStatus.bind(controller))
 );
 
 // Delete order
@@ -74,9 +67,7 @@ router.delete(
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   idValidator,
   expressValidator,
-  async (req: Request, res: Response) => {
-    await controller.deleteOrder(req, res);
-  }
+  asyncHandler(controller.deleteOrder.bind(controller))
 );
 
 // Get order
@@ -87,9 +78,7 @@ router.get(
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
   idValidator,
   expressValidator,
-  async (req: Request, res: Response) => {
-    await controller.getOrder(req, res);
-  }
+  asyncHandler(controller.getOrder.bind(controller))
 );
 
 // Get all order
@@ -98,9 +87,7 @@ router.get(
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
-  async (req: Request, res: Response) => {
-    await controller.getAllOrder(req, res);
-  }
+  asyncHandler(controller.getAllOrder.bind(controller))
 );
 
 export default router;

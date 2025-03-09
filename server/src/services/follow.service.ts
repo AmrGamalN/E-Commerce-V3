@@ -6,6 +6,11 @@ import {
   FollowAddDtoType,
   FollowAddDto,
 } from "../dto/follow.dto";
+import {
+  formatDataAdd,
+  formatDataGetAll,
+  formatDataGetOne,
+} from "../utils/dataFormatter";
 
 class FollowService {
   private static Instance: FollowService;
@@ -18,14 +23,10 @@ class FollowService {
   }
 
   // Used to add follow to ite or conversation
-  async addFollow(user: any, body: FollowAddDtoType): Promise<object> {
+  async addFollow(user: any, data: FollowAddDtoType): Promise<object> {
     try {
-      const parsed = FollowAddDto.safeParse(body);
-      if (!parsed.success) {
-        throw new Error("Invalid follow data");
-      }
-
-      if (user?.user_id === body.followingId) {
+      formatDataAdd(data, FollowAddDto);
+      if (user?.user_id === data.followingId) {
         return { message: "Not allow to following your account" };
       }
 
@@ -34,25 +35,23 @@ class FollowService {
       const [existingFollow, userFollowing] = await Promise.all([
         Follow.exists({
           followerId: user?.user_id,
-          followingId: body.followingId,
+          followingId: data.followingId,
         }),
-        User.findOne({ userId: body.followingId }).select("name").lean(),
+        User.findOne({ userId: data.followingId }).select("name").lean(),
       ]);
 
       if (existingFollow) return { message: "Already following this account" };
       if (!userFollowing) return { message: "User not found" };
 
       // Update both follower and following count in the User model
-      await this.updateFollow(user?.user_id, body.followingId, 1);
+      await this.updateFollow(user?.user_id, data.followingId, 1);
 
       // Create a new follow
-      const newFollow = new Follow({
+      return await Follow.create({
         followerId: user?.user_id,
         followingName: userFollowing?.name,
-        followingId: body.followingId,
+        followingId: data.followingId,
       });
-      await newFollow.save();
-      return newFollow;
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error fetching follow"
@@ -95,19 +94,8 @@ class FollowService {
         typeFollow === "follower"
           ? { followerId: userId, _id: followId }
           : { followingId: userId, _id: followId };
-      const retrievedFollow = await Follow.findOne(query).lean();
-
-      if (retrievedFollow == null) {
-        throw new Error(`${typeFollow} not found`);
-      }
-      const { _id, ...followData } = retrievedFollow;
-      const parsed = FollowDto.safeParse(followData);
-
-      if (!parsed.success) {
-        throw new Error("Invalid follow data");
-      }
-      const follow = { _id, ...parsed.data };
-      return follow;
+      const retrievedFollow = await Follow.findById(query).lean();
+      return formatDataGetOne(retrievedFollow, FollowDto);
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : `Error fetching ${typeFollow}`
@@ -131,16 +119,7 @@ class FollowService {
         .skip((page - 1) * 10)
         .limit(10)
         .lean();
-
-      const followDto = retrievedFollow.map((follow) => {
-        const { _id, ...follows } = follow;
-        const parsed = FollowDto.safeParse(follows);
-        if (!parsed.success) {
-          throw new Error("Invalid follow data");
-        }
-        return { _id, ...parsed.data };
-      });
-      return followDto;
+      return formatDataGetAll(retrievedFollow, FollowDto);
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : `Error fetching ${typeFollow}`

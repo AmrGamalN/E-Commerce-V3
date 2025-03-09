@@ -1,7 +1,16 @@
 import { check } from "express-validator";
 
-export const couponValidator = [
+const couponValidatorFactory = (isUpdate = false) => [
+  check("couponId")
+    .if(() => isUpdate)
+    .trim()
+    .notEmpty()
+    .withMessage("COUPON ID IS REQUIRED")
+    .isMongoId()
+    .withMessage("INVALID MONGODB ID"),
+
   check("itemId")
+    .if(() => !isUpdate)
     .trim()
     .notEmpty()
     .withMessage("ITEM ID IS REQUIRED")
@@ -11,10 +20,11 @@ export const couponValidator = [
   check("discount")
     .trim()
     .notEmpty()
-    .withMessage("Discount IS REQUIRED")
+    .withMessage("DISCOUNT IS REQUIRED")
     .isInt({ min: 1, max: 100 })
     .withMessage("Discount Percentage must be an integer between 1 and 100")
-    .toInt(),
+    .toInt()
+    .optional(isUpdate),
 
   check("maxUses")
     .trim()
@@ -22,59 +32,25 @@ export const couponValidator = [
     .withMessage("Max Uses IS REQUIRED")
     .isInt({ min: 1 })
     .withMessage("Max Uses must be an integer number greater than 0")
-    .toInt(),
+    .toInt()
+    .optional(isUpdate),
 
   check("expiresAt")
     .trim()
     .notEmpty()
     .withMessage("Expiration date is required")
     .isISO8601()
-    .withMessage("Invalid date format,e.g., YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss.sssZ)")
+    .withMessage("Invalid date format, e.g., YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss.sssZ")
     .toDate()
     .custom((value) => {
       if (value < new Date()) {
         throw new Error("Expiration date cannot be in the past");
       }
       return true;
-    }),
-];
+    })
+    .optional(isUpdate),
+].filter(Boolean);
 
-export const couponUpdateValidator = [
-  check("couponId")
-    .trim()
-    .notEmpty()
-    .withMessage("ITEM ID IS REQUIRED")
-    .isMongoId()
-    .withMessage("INVALID MONGODB ID"),
-
-  check("maxUses")
-    .trim()
-    .notEmpty()
-    .withMessage("Max Uses IS REQUIRED")
-    .isInt({ min: 1 })
-    .withMessage("Max Uses must be an integer number greater than 0")
-    .toInt(),
-
-  check("discount")
-    .notEmpty()
-    .withMessage("DISCOUNT IS REQUIRED")
-    .isInt({ min: 1 })
-    .withMessage("DISCOUNT MUST BE A NUMBER"),
-
-    check("expiresAt")
-    .trim()
-    .notEmpty()
-    .withMessage("Expiration date is required")
-    .isISO8601()
-    .withMessage("Invalid date format,e.g., YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss.sssZ)")
-    .toDate()
-    .custom((value) => {
-      if (value < new Date()) {
-        throw new Error("Expiration date cannot be in the past");
-      }
-      return true;
-    }),
-];
 
 export const couponApplyValidator = [
   check("couponId")
@@ -114,3 +90,6 @@ export const couponApplyValidator = [
     .isInt({ min: 1 })
     .withMessage("PRICE MUST BE A NUMBER"),
 ];
+
+export const couponAddValidator = couponValidatorFactory(false);
+export const couponUpdateValidator = couponValidatorFactory(true);

@@ -35,6 +35,9 @@ export const itemValidator = [
 
   check("communications")
     .trim()
+    .customSanitizer((value) =>
+      typeof value === "string" ? value.split(",") : value
+    )
     .isArray({ min: 1 })
     .withMessage("COMMUNICATION MUST BE AN ARRAY")
     .matches(/^(phone|chat)$/)
@@ -73,7 +76,9 @@ export const itemValidator = [
 
   check("paymentOptions")
     .trim()
-    .optional()
+    .customSanitizer((value) =>
+      typeof value === "string" ? value.split(",") : value
+    )
     .isArray({ min: 1 })
     .withMessage("PAYMENT OPTIONS MUST BE AN ARRAY")
     .matches(/^(cash|credit card|meeza|fawry|visa|we pay|paymob)$/)
@@ -135,20 +140,27 @@ export const itemValidator = [
     .notEmpty()
     .withMessage("PRICE IS REQUIRED")
     .isInt({ min: 1 })
-    .withMessage("PRICE MUST BE A NUMBER"),
+    .withMessage("PRICE MUST BE A NUMBER")
+    .toInt(),
 
   check("allowQuantity")
     .isInt({ min: 1, max: 10 })
     .withMessage("ALLOW QUANTITY MUST BE A NUMBER")
-    .optional(),
+    .toInt(),
+
+  check("availableQuantity")
+    .isInt({ min: 1 })
+    .withMessage("AVAILABLE QUANTITY MUST BE A NUMBER")
+    .toInt(),
 
   check("discount")
     .isInt()
     .withMessage("DISCOUNT MUST BE A NUMBER")
     .default(0)
-    .optional(),
+    .optional()
+    .toInt(),
 
-  check("isSavedForLater").optional().isBoolean().toBoolean(),
-  check("allowNegotiate").optional().isBoolean().toBoolean(),
-  check("promotion").optional().isBoolean().toBoolean(),
+  check("isSavedForLater").isBoolean().toBoolean().optional(),
+  check("allowNegotiate").isBoolean().toBoolean().optional(),
+  check("promotion").isBoolean().toBoolean().optional(),
 ];

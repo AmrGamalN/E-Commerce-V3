@@ -1,10 +1,10 @@
-import express, { Request, Response } from "express";
+import express from "express";
 import ReportController from "../controllers/report.controller";
-import AuthenticationMiddleware from "../middlewares/auth.middleware";
-import { expressValidator } from "../middlewares/express.validator.middleware";
+import AuthenticationMiddleware from "../middlewares/authentication";
+import { expressValidator } from "../middlewares/expressValidator";
 import { idValidator } from "../validations/general.validator";
 import {
-  reportValidator,
+  reportAddValidator,
   reportUpdateValidator,
   reportFeedBackValidator,
 } from "../validations/report.validator";
@@ -13,7 +13,8 @@ import {
   ReportUpdateDto,
   ReportFeedBackDto,
 } from "../dto/report.dto";
-import { validatorBody } from "../middlewares/zod.validator.middleware";
+import { validatorBody } from "../middlewares/zodValidator";
+import { asyncHandler } from "../middlewares/handleError";
 
 const controller = ReportController.getInstance();
 const router = express.Router();
@@ -24,9 +25,7 @@ router.get(
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["ADMIN", "MANAGER"]),
-  async (req: Request, res: Response) => {
-    await controller.countReport(req, res);
-  }
+  asyncHandler(controller.countReport.bind(controller))
 );
 
 // Add report
@@ -35,12 +34,10 @@ router.post(
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
-  reportValidator,
+  reportAddValidator,
   expressValidator,
   validatorBody(ReportAddDto),
-  async (req: Request, res: Response) => {
-    await controller.addReport(req, res);
-  }
+  asyncHandler(controller.addReport.bind(controller))
 );
 
 // Update report
@@ -52,9 +49,7 @@ router.put(
   reportUpdateValidator,
   expressValidator,
   validatorBody(ReportUpdateDto),
-  async (req: Request, res: Response) => {
-    await controller.updateReport(req, res);
-  }
+  asyncHandler(controller.updateReport.bind(controller))
 );
 
 // feedback report
@@ -66,9 +61,7 @@ router.put(
   reportFeedBackValidator,
   expressValidator,
   validatorBody(ReportFeedBackDto),
-  async (req: Request, res: Response) => {
-    await controller.feedBackReport(req, res);
-  }
+  asyncHandler(controller.feedBackReport.bind(controller))
 );
 
 // Delete report
@@ -78,10 +71,7 @@ router.delete(
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   idValidator,
-  expressValidator,
-  async (req: Request, res: Response) => {
-    await controller.deleteReport(req, res);
-  }
+  expressValidator
 );
 
 // Get report
@@ -92,9 +82,7 @@ router.get(
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
   idValidator,
   expressValidator,
-  async (req: Request, res: Response) => {
-    await controller.getReport(req, res);
-  }
+  asyncHandler(controller.getReport.bind(controller))
 );
 
 // Get all report
@@ -103,9 +91,7 @@ router.get(
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
-  async (req: Request, res: Response) => {
-    await controller.getAllReport(req, res);
-  }
+  asyncHandler(controller.getAllReport.bind(controller))
 );
 
 export default router;

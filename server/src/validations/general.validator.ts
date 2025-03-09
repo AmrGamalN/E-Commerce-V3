@@ -6,7 +6,8 @@ export const idValidator = [
     .notEmpty()
     .withMessage("ID IS REQUIRED")
     .isMongoId()
-    .withMessage("INVALID MONGODB ID"),
+    .withMessage("INVALID MONGODB ID")
+    .optional(),
 
   check("itemId")
     .trim()

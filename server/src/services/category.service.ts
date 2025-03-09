@@ -1,26 +1,27 @@
 import Category from "../models/mongodb/category.model";
 import { CategoryDtoType, CategoryDto } from "../dto/category.dto";
+import {
+  formatDataAdd,
+  formatDataGetAll,
+  formatDataGetOne,
+  formatDataUpdate,
+} from "../utils/dataFormatter";
 
-class Categorieservice {
-  private static Instance: Categorieservice;
+class CategoryService {
+  private static Instance: CategoryService;
   constructor() {}
-  public static getInstance(): Categorieservice {
-    if (!Categorieservice.Instance) {
-      Categorieservice.Instance = new Categorieservice();
+  public static getInstance(): CategoryService {
+    if (!CategoryService.Instance) {
+      CategoryService.Instance = new CategoryService();
     }
-    return Categorieservice.Instance;
+    return CategoryService.Instance;
   }
 
   // Add category
   async addCategory(data: CategoryDtoType): Promise<CategoryDtoType> {
     try {
-      const parsed = CategoryDto.safeParse(data);
-      if (!parsed.success) {
-        throw new Error("Invalid category data");
-      }
-      const category = await Category.create({ ...parsed.data });
-      await category.save();
-      return category;
+      const parsed = formatDataAdd(data, CategoryDto);
+      return await Category.create({ ...parsed });
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error adding categories"
@@ -31,19 +32,10 @@ class Categorieservice {
   // Get Category by categoryId and userId
   async getCategory(categoryId: string): Promise<CategoryDtoType> {
     try {
-      const retrievedCategory = await Category.findOne({
+      const retrievedCategory = await Category.findById({
         _id: categoryId,
       });
-      if (retrievedCategory == null) {
-        throw new Error("Category not found");
-      }
-      const parsed = CategoryDto.safeParse(retrievedCategory);
-
-      if (!parsed.success) {
-        throw new Error("Invalid category data");
-      }
-      const category = { _id: retrievedCategory?._id, ...parsed.data };
-      return category;
+      return formatDataGetOne(retrievedCategory, CategoryDto);
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error fetching category"
@@ -54,17 +46,8 @@ class Categorieservice {
   // Get all categories by userId
   async getAllCategory(): Promise<CategoryDtoType[]> {
     try {
-      const retrievedCategory = await Category.find({});
-
-      const categoryDto = retrievedCategory.map((category) => {
-        const { _id, ...categories } = category.toObject();
-        const parsed = CategoryDto.safeParse(categories);
-        if (!parsed.success) {
-          throw new Error("Invalid category data");
-        }
-        return { _id, ...parsed.data };
-      });
-      return categoryDto;
+      const retrievedCategory = await Category.find({}).lean();
+      return formatDataGetAll(retrievedCategory, CategoryDto);
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error fetching categories"
@@ -76,24 +59,18 @@ class Categorieservice {
   async updateCategory(
     categoryId: string,
     data: CategoryDtoType
-  ): Promise<CategoryDtoType | null> {
+  ): Promise<number> {
     try {
-      const parsed = CategoryDto.safeParse(data);
-      if (!parsed.success) {
-        throw new Error("Invalid category data");
-      }
-
-      const updatedCategory = await Category.findOneAndUpdate(
+      const parsed = formatDataUpdate(data, CategoryDto);
+      const updatedCategory = await Category.updateOne(
         {
           _id: categoryId,
         },
         {
-          $set: parsed.data,
-        },
-        { new: true, runValidators: true }
+          $set: parsed,
+        }
       );
-
-      return updatedCategory ? updatedCategory.toObject() : null;
+      return updatedCategory.matchedCount;
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error updating categories"
@@ -128,4 +105,4 @@ class Categorieservice {
   }
 }
 
-export default Categorieservice;
+export default CategoryService;

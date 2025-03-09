@@ -7,6 +7,7 @@ import { RegisterDtoType } from "../dto/auth.dto";
 import { UserDtoType } from "../dto/user.dto";
 import moment from "moment-timezone";
 import bcrypt from "bcrypt";
+import { formatDataAdd } from "../utils/dataFormatter";
 
 class AuthService {
   private static instance: AuthService;
@@ -20,34 +21,30 @@ class AuthService {
   }
 
   // Register user
-  async registerUser(body: RegisterDtoType): Promise<void> {
+  async registerUser(data: RegisterDtoType): Promise<void> {
     try {
       const userRegister = await auth.createUser({
-        phoneNumber: body.mobile,
-        password: body.password,
-        email: body.email,
+        phoneNumber: data.mobile,
+        password: data.password,
+        email: data.email,
       });
 
       const user = new User({
-        ...body,
-        password: await bcrypt.hash(body.password, 10),
+        ...data,
+        password: await bcrypt.hash(data.password, 10),
         userId: userRegister.uid,
-        dateOfJoining: moment().tz("Africa/Cairo").toISOString(),
-        lastSeen: moment().tz("Africa/Cairo").toISOString(),
+        dateOfJoining: new Date().toISOString(),
       });
 
       const { _id, ...userData } = user.toObject();
-      const parsed = UserDto.safeParse(userData);
-      if (!parsed.success) {
-        throw new Error("Invalid user data");
-      }
+      formatDataAdd(userData, UserDto);
 
       // Store user data in caching and send verification to verify email
       const verificationLink = await auth.generateEmailVerificationLink(
-        body.email
+        data.email
       );
       await sendVerificationEmail(
-        body.email,
+        data.email,
         verificationLink,
         "Verify Your Email",
         "Please verify your email by clicking the following link:"
@@ -119,14 +116,9 @@ class AuthService {
       const userData = JSON.parse(userDataString);
       userData.dateOfJoining = new Date(userData.dateOfJoining);
       userData.lastSeen = new Date(userData.lastSeen);
+      const parsed = formatDataAdd(userData, UserDto);
 
-      const parsed = UserDto.safeParse(userData);
-      if (!parsed.success) {
-        throw new Error("Invalid user data");
-      }
-
-      const user = new User(userData);
-      await user.save();
+      await User.create({ ...parsed });
       await client.del(`userId:${uid}`);
     } catch (error) {
       throw new Error(

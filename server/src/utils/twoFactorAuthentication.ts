@@ -2,7 +2,6 @@ import { Request, Response} from "express";
 import qrcode from "qrcode";
 import speakeasy from "speakeasy";
 import User from "../models/mongodb/user.model";
-import crypto from "node:crypto";
 import { generateToken } from "./generateToken.utils";
 
 export class TwoFactorAuthController {

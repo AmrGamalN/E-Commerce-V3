@@ -1,50 +1,37 @@
 import express from "express";
-import AddressController from "../controllers/address.controller";
+import WishListController from "../controllers/wishList.controller";
 import AuthenticationMiddleware from "../middlewares/authentication";
 import { validatorBody } from "../middlewares/zodValidator";
 import { expressValidator } from "../middlewares/expressValidator";
-import { AddressAddDto } from "../dto/address.dto";
-import { addressValidator } from "../validations/address.validator";
+import { WishListAddDto } from "../dto/wishList.dto";
 import { idValidator } from "../validations/general.validator";
 import { asyncHandler } from "../middlewares/handleError";
 
-const controller = AddressController.getInstance();
+const controller = WishListController.getInstance();
 const router = express.Router();
 
-// Count address
+// Count wishList
 router.get(
-  "/count",
+  "/count/:id",
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
-  asyncHandler(controller.countAddress.bind(controller))
+  asyncHandler(controller.countWishList.bind(controller))
 );
 
-// Add address
+// Add wishList
 router.post(
   "/add",
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
-  addressValidator,
+  idValidator,
   expressValidator,
-  validatorBody(AddressAddDto),
-  asyncHandler(controller.addAddress.bind(controller))
+  validatorBody(WishListAddDto),
+  asyncHandler(controller.addWishList.bind(controller))
 );
 
-// Update address
-router.put(
-  "/update/:id",
-  AuthenticationMiddleware.refreshToken,
-  AuthenticationMiddleware.verifyIdToken,
-  AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
-  addressValidator,
-  expressValidator,
-  validatorBody(AddressAddDto),
-  asyncHandler(controller.updateAddress.bind(controller))
-);
-
-// Delete address
+// Delete wishList
 router.delete(
   "/delete/:id",
   AuthenticationMiddleware.refreshToken,
@@ -52,10 +39,21 @@ router.delete(
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   idValidator,
   expressValidator,
-  asyncHandler(controller.deleteAddress.bind(controller))
+  asyncHandler(controller.deleteWishList.bind(controller))
 );
 
-// Get address
+// Clear wishList
+router.delete(
+  "/clear/:id",
+  AuthenticationMiddleware.refreshToken,
+  AuthenticationMiddleware.verifyIdToken,
+  AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
+  idValidator,
+  expressValidator,
+  asyncHandler(controller.clearWishList.bind(controller))
+);
+
+// Get wishList
 router.get(
   "/get/:id",
   AuthenticationMiddleware.refreshToken,
@@ -63,16 +61,7 @@ router.get(
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
   idValidator,
   expressValidator,
-  asyncHandler(controller.getAddress.bind(controller))
-);
-
-// Get all address
-router.get(
-  "/get-all",
-  AuthenticationMiddleware.refreshToken,
-  AuthenticationMiddleware.verifyIdToken,
-  AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
-  asyncHandler(controller.getAllAddress.bind(controller))
+  asyncHandler(controller.getWishList.bind(controller))
 );
 
 export default router;

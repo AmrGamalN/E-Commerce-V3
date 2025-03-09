@@ -10,10 +10,20 @@ import {
   OrderUpdateDtoType,
 } from "../dto/order.dto";
 import mongoose from "mongoose";
+import {
+  formatDataAdd,
+  formatDataGetAll,
+  formatDataGetOne,
+  formatDataUpdate,
+} from "../utils/dataFormatter";
+import ItemService from "./item.service";
 
 class OrderService {
   private static Instance: OrderService;
-  constructor() {}
+  private itemService: ItemService;
+  constructor() {
+    this.itemService = ItemService.getInstance();
+  }
   public static getInstance(): OrderService {
     if (!OrderService.Instance) {
       OrderService.Instance = new OrderService();
@@ -24,11 +34,7 @@ class OrderService {
   // Add order
   async addOrder(data: OrderAddDtoType, userId: string): Promise<object> {
     try {
-      const parsed = OrderAddDto.safeParse(data);
-      if (!parsed.success) {
-        throw new Error("Invalid order data");
-      }
-
+      const parsed = formatDataAdd(data, OrderAddDto);
       const result = await Item.aggregate([
         { $match: { _id: new mongoose.Types.ObjectId(data.itemId) } },
         {
@@ -74,7 +80,7 @@ class OrderService {
         return { message: "Order already exists" };
       }
 
-      if (parsed.data.quantity > item.allowQuantity) {
+      if (parsed.quantity > item.allowQuantity) {
         return { message: " You have exceeded the allowed quantity limit." };
       }
 
@@ -84,7 +90,7 @@ class OrderService {
 
       const totalPrice = this.calculateTotalPrice(
         item.price,
-        parsed.data.quantity,
+        parsed.quantity,
         item.discount
       );
 
@@ -97,7 +103,7 @@ class OrderService {
       const discountType =
         item.discount == 0 ? "no_discount" : "global_discount";
       const newOrder = await Order.create({
-        ...parsed.data,
+        ...parsed,
         buyerId: userId,
         sellerId: item.userId,
         sellerAddress: item.location,
@@ -108,7 +114,6 @@ class OrderService {
         secretCode: uniqueCode,
         discountType: discountType,
       });
-
       return { message: "Order added Successfully", data: newOrder };
     } catch (error) {
       throw new Error(
@@ -130,22 +135,11 @@ class OrderService {
   // Get Order by orderId and buyerId
   async getOrder(orderId: string, buyerId: string): Promise<OrderDtoType> {
     try {
-      const retrievedOrder = await Order.findOne({
-        _id: orderId,
+      const retrievedOrder = await Order.findById({
+        _id: new mongoose.Types.ObjectId(orderId),
         buyerId: buyerId,
       }).lean();
-
-      if (retrievedOrder == null) {
-        throw new Error("Order not found");
-      }
-      const { _id, ...orderData } = retrievedOrder;
-      const parsed = OrderDto.safeParse(orderData);
-
-      if (!parsed.success) {
-        throw new Error("Invalid order data");
-      }
-      const order = { _id, ...parsed.data };
-      return order;
+      return formatDataGetOne(retrievedOrder, OrderDto);
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error fetching order"
@@ -159,16 +153,7 @@ class OrderService {
       const retrievedOrder = await Order.find({
         buyerId: buyerId,
       }).lean();
-
-      const orderDto = retrievedOrder.map((order) => {
-        const { _id, ...orders } = order;
-        const parsed = OrderDto.safeParse(orders);
-        if (!parsed.success) {
-          throw new Error("Invalid order data");
-        }
-        return { _id, ...parsed.data };
-      });
-      return orderDto;
+      return formatDataGetAll(retrievedOrder, OrderDto);
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error fetching order"
@@ -179,28 +164,16 @@ class OrderService {
   // Update order
   async updateOrder(userId: string, data: OrderUpdateDtoType): Promise<object> {
     try {
-      const parsed = OrderUpdateDto.safeParse(data);
-      if (!parsed.success) {
-        throw new Error("Invalid order data");
-      }
+      const parsed = formatDataUpdate(data, OrderUpdateDto);
+      const retrievedItem = await this.itemService.getItem(data.itemId, userId);
 
-      const retrievedItem = await Item.findById({
-        _id: data.itemId,
-      })
-        .select("allowQuantity price discount")
-        .lean();
-
-      if (!retrievedItem) {
-        return { message: "Item not found" };
-      }
-
-      if (parsed.data.quantity > retrievedItem.allowQuantity) {
+      if (parsed.quantity > retrievedItem.allowQuantity) {
         return { message: " You have exceeded the allowed quantity limit." };
       }
 
       const totalPrice = this.calculateTotalPrice(
         retrievedItem.price,
-        parsed.data.quantity,
+        parsed.quantity,
         Number(retrievedItem.discount)
       );
 
@@ -211,9 +184,9 @@ class OrderService {
         },
         {
           $set: {
-            currency: parsed.data.currency,
-            buyerAddress: parsed.data.buyerAddress,
-            quantity: parsed.data.quantity,
+            currency: parsed.currency,
+            buyerAddress: parsed.buyerAddress,
+            quantity: parsed.quantity,
             totalPrice: totalPrice,
           },
         }

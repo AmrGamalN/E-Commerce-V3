@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
-import Categorieservice from "../services/category.service";
+import CategoryService from "../services/category.service";
 
 class CategoryController {
   private static Instance: CategoryController;
-  private serviceInstance: Categorieservice;
+  private serviceInstance: CategoryService;
   constructor() {
-    this.serviceInstance = Categorieservice.getInstance();
+    this.serviceInstance = CategoryService.getInstance();
   }
 
   public static getInstance(): CategoryController {
@@ -15,130 +15,89 @@ class CategoryController {
     return CategoryController.Instance;
   }
 
-  private handleError(
-    res: Response,
-    message: string,
-    error: unknown,
-    status = 400
-  ): void {
-    res.status(status).json({
-      message,
-      error: error instanceof Error ? error.message : error,
-    });
-  }
-
   // Add category
   async addCategory(req: Request, res: Response): Promise<void> {
-    try {
-      const retrievedCategory = await this.serviceInstance.addCategory(
-        req.body
-      );
-      if (!retrievedCategory) {
-        res.status(400).json({ message: "Failed to add category" });
-        return;
-      }
-      res.status(200).json({ message: "Category added Successfully" });
-    } catch (error) {
-      this.handleError(res, "Failed to add category", error);
+    const retrievedCategory = await this.serviceInstance.addCategory(req.body);
+    if (!retrievedCategory) {
+      res.status(400).json({ message: "Failed to add category" });
+      return;
     }
+    res.status(200).json({ message: "Category added Successfully" });
   }
 
   // Get Category
   async getCategory(req: Request, res: Response): Promise<void> {
-    try {
-      const { id } = req.params;
-      const retrievedCategory = await this.serviceInstance.getCategory(
-        String(id)
-      );
-      if (retrievedCategory == null) {
-        res.status(404).json({ message: "Not found Category", data: [] });
-        return;
-      }
-      res.status(200).json({
-        message: "Category get Successfully",
-        data: retrievedCategory,
-      });
-    } catch (error) {
-      this.handleError(res, "Failed to get category", error);
+    const { id } = req.params;
+    const retrievedCategory = await this.serviceInstance.getCategory(
+      String(id)
+    );
+    if (retrievedCategory == null) {
+      res.status(404).json({ message: "Not found Category", data: [] });
+      return;
     }
+    res.status(200).json({
+      message: "Category get Successfully",
+      data: retrievedCategory,
+    });
   }
 
   // Get all categories
   async getAllCategory(req: Request, res: Response): Promise<void> {
-    try {
-      const retrievedCategories = await this.serviceInstance.getAllCategory();
-      const count = await this.serviceInstance.countCategories();
-      if (retrievedCategories.length == 0) {
-        res.status(200).json({ message: "Not found Categories", data: [] });
-        return;
-      }
-      res.status(200).json({
-        count: count,
-        message: "Categories get Successfully",
-        data: retrievedCategories,
-      });
-    } catch (error) {
-      this.handleError(res, "Failed to get categories", error);
+    const retrievedCategories = await this.serviceInstance.getAllCategory();
+    const count = await this.serviceInstance.countCategories();
+    if (retrievedCategories.length == 0) {
+      res.status(200).json({ message: "Not found Categories", data: [] });
+      return;
     }
+    res.status(200).json({
+      count: count,
+      message: "Categories get Successfully",
+      data: retrievedCategories,
+    });
   }
 
   // Update category
   async updateCategory(req: Request, res: Response): Promise<void> {
-    try {
-      const { id } = req.params;
-
-      const retrievedCategory = await this.serviceInstance.updateCategory(
-        String(id),
-
-        req.body
-      );
-      if (retrievedCategory == null) {
-        res.status(404).json({ message: "Not found Category", data: [] });
-        return;
-      }
-      res.status(200).json({
-        message: "Category updated Successfully",
-        data: retrievedCategory,
-      });
-    } catch (error) {
-      this.handleError(res, "Failed to update category", error);
+    const { id } = req.params;
+    const retrievedCategory = await this.serviceInstance.updateCategory(
+      String(id),
+      req.body
+    );
+    if (retrievedCategory == 0) {
+      res.status(404).json({ message: "Not found category" });
+      return;
     }
+    res.status(200).json({
+      message: "Category updated successfully",
+    });
   }
 
   // Count of Category
   async countCategories(req: Request, res: Response): Promise<void> {
-    try {
-      const count = await this.serviceInstance.countCategories();
-      if (count == 0) {
-        res.status(404).json({ message: "Not found Categories", data: 0 });
-        return;
-      }
-      res.status(200).json({
-        message: "Count category fetched successfully",
-        data: count,
-      });
-    } catch (error) {
-      this.handleError(res, "Failed to fetch count category!", error);
+    const count = await this.serviceInstance.countCategories();
+    if (count == 0) {
+      res.status(404).json({ message: "Not found Categories", data: 0 });
+      return;
     }
+    res.status(200).json({
+      message: "Count category fetched successfully",
+      data: count,
+    });
   }
 
   // Delete category
   async deleteCategory(req: Request, res: Response): Promise<void> {
-    try {
-      const { id } = req.params;
-      const retrievedCategory = await this.serviceInstance.deleteCategory(
-        String(id)
-      );
-      if (retrievedCategory == 0) {
-        res.status(404).json({ message: "Not found Category", data: [] });
-        return;
-      }
-      res
-        .status(200)
-        .json({ message: "Category deleted Successfully", data: [] });
-    } catch (error) {
-      this.handleError(res, "Failed to delete category", error);
+    const { id } = req.params;
+    const retrievedCategory = await this.serviceInstance.deleteCategory(
+      String(id)
+    );
+    if (retrievedCategory == 0) {
+      res.status(404).json({ message: "Not found Category", data: [] });
+      return;
     }
+    res
+      .status(200)
+      .json({ message: "Category deleted Successfully", data: [] });
   }
 }
 

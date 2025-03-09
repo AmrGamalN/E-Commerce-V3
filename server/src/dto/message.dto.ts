@@ -18,15 +18,14 @@ export const MessageDto = z.object({
   }),
 });
 
-export const MessageAddDto = z.object({
-  senderId: z.string(),
-  receiverId: z.string(),
-  messageType: z
-    .array(z.enum(["TEXT", "IMAGE", "VIDEO", "OFFER"]))
-    .default(["TEXT"]),
-  text: z.string().default(""),
-  attachments: z.array(z.string()).default([]),
-  readStatus: z.record(z.string(), z.boolean()).default({}),
+export const MessageAddDto = MessageDto.pick({
+  senderId: true,
+  receiverId: true,
+  messageType: true,
+  text: true,
+  attachments: true,
+  readStatus: true,
+}).extend({
   createdAt: z.date(),
   updatedAt: z.date(),
 });

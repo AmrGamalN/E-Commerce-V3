@@ -25,20 +25,21 @@ export const OrderDto = z.object({
   updatedAt: z.date().optional(),
 });
 
-export const OrderAddDto = z.object({
-  itemId: z.string(),
-  paymentId: z.string(),
-  currency: z.enum(["EGP"]).default("EGP"),
-  quantity: z.number().min(1).max(10).positive(),
-  buyerAddress: z.string(),
+export const OrderAddDto = OrderDto.pick({
+  itemId: true,
+  paymentId: true,
+  currency: true,
+  quantity: true,
+  buyerAddress: true,
 });
 
-export const OrderUpdateDto = z.object({
-  itemId: z.string(),
+export const OrderUpdateDto = OrderDto.pick({
+  itemId: true,
+  currency: true,
+  quantity: true,
+  buyerAddress: true,
+}).extend({
   orderId: z.string(),
-  currency: z.enum(["EGP"]).default("EGP"),
-  quantity: z.number().min(1).max(10).positive(),
-  buyerAddress: z.string(),
 });
 
 export type OrderDtoType = z.infer<typeof OrderDto>;

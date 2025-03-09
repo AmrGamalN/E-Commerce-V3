@@ -62,37 +62,30 @@ export const ItemDto = z.object({
   promotion: z.boolean().default(false),
 });
 
-export const ItemAddDto = z.object({
-  category: z.string(),
-  subcategory: z.string(),
-  nestedSubCategory: z.string().optional(),
-  brand: z.string(),
-  type: z.string().optional(),
-  itemImages: z
-    .array(
-      z.object({
-        imageUrl: z.string(),
-        rotateDeg: z.number(),
-        _id: z.string().optional(),
-      })
-    )
-    .default([]),
-  communications: z.array(z.string()).default([]),
-  title: z.string(),
-  description: z.string(),
-  condition: z.enum(["NEW", "OLD", "USE"]).default("NEW"),
-  paymentOptions: z.array(z.string()).default([]),
-  location: z.string(),
-  phone: z.string(),
-  size: z.string().optional(),
-  material: z.string().optional(),
-  allowQuantity: z.number().optional(),
-  color: z.string().optional(),
-  price: z.number().optional(),
-  discount: z.number().min(0).max(100).optional(),
-  isSavedForLater: z.boolean().default(false),
-  allowNegotiate: z.boolean().default(false),
-  coupons: z.string().optional(),
+export const ItemAddDto = ItemDto.pick({
+  category: true,
+  subcategory: true,
+  nestedSubCategory: true,
+  brand: true,
+  type: true,
+  itemImages: true,
+  communications: true,
+  title: true,
+  description: true,
+  condition: true,
+  paymentOptions: true,
+  location: true,
+  phone: true,
+  size: true,
+  material: true,
+  allowQuantity: true,
+  availableQuantity: true,
+  color: true,
+  price: true,
+  discount: true,
+  isSavedForLater: true,
+  allowNegotiate: true,
+  coupons: true,
 });
 
 export type ItemAddDtoType = z.infer<typeof ItemAddDto>;
