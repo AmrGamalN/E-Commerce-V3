@@ -15,18 +15,6 @@ class ReviewController {
     return ReviewController.Instance;
   }
 
-  private handleError(
-    res: Response,
-    message: string,
-    error: unknown,
-    status = 500
-  ): void {
-    res.status(status).json({
-      message,
-      error: error instanceof Error ? error.message : error,
-    });
-  }
-
   /**
    * Add a new review for item.
    *
@@ -44,24 +32,20 @@ class ReviewController {
    *   - A buyer can submit a review for an item.
    */
   async addReview(req: Request, res: Response): Promise<void> {
-    try {
-      const buyerId = req.user?.user_id;
-      const buyerName = req.user?.name;
-      const { id } = req.params;
-      const retrievedReview = await this.serviceInstance.addReview(
-        req.body,
-        buyerId,
-        buyerName,
-        String(id)
-      );
-      if (!retrievedReview) {
-        res.status(400).json({ message: "Failed to add review" });
-        return;
-      }
-      res.status(200).json({ message: "Review added Successfully" });
-    } catch (error) {
-      this.handleError(res, "Failed to add review", error);
+    const buyerId = req.user?.user_id;
+    const buyerName = req.user?.name;
+    const { id } = req.params;
+    const retrievedReview = await this.serviceInstance.addReview(
+      req.body,
+      buyerId,
+      buyerName,
+      String(id)
+    );
+    if (!retrievedReview) {
+      res.status(400).json({ message: "Failed to add review" });
+      return;
     }
+    res.status(200).json({ message: "Review added Successfully" });
   }
 
   /**
@@ -82,23 +66,19 @@ class ReviewController {
    *   - Admin can retrieve review for a specific user using `userId , reviewId`.
    */
   async getReview(req: Request, res: Response): Promise<void> {
-    try {
-      const { userId, reviewId } = req.body;
-      const sellerId = userId ? userId : req.user?.user_id;
-      const retrievedReview = await this.serviceInstance.getReview(
-        String(reviewId),
-        sellerId
-      );
-      if (retrievedReview == null) {
-        res.status(404).json({ message: "Not found review", data: [] });
-        return;
-      }
-      res
-        .status(200)
-        .json({ message: "Review get Successfully", data: retrievedReview });
-    } catch (error) {
-      this.handleError(res, "Failed to get review", error);
+    const { userId, reviewId } = req.body;
+    const sellerId = userId ? userId : req.user?.user_id;
+    const retrievedReview = await this.serviceInstance.getReview(
+      String(reviewId),
+      sellerId
+    );
+    if (retrievedReview == null) {
+      res.status(404).json({ message: "Not found review", data: [] });
+      return;
     }
+    res
+      .status(200)
+      .json({ message: "Review get Successfully", data: retrievedReview });
   }
 
   /**
@@ -120,37 +100,33 @@ class ReviewController {
    *   - Admin can retrieve reviews for a specific user using `userId`.
    */
   async getAllReview(req: Request, res: Response): Promise<void> {
-    try {
-      const { page } = req.query;
-      const { itemId, userId } = req.body;
-      const sellerId = userId ? userId : req.user?.user_id;
-      const retrievedReviews = await this.serviceInstance.getAllReview(
-        sellerId,
-        Number(page)
-      );
+    const { page } = req.query;
+    const { itemId, userId } = req.body;
+    const sellerId = userId ? userId : req.user?.user_id;
+    const retrievedReviews = await this.serviceInstance.getAllReview(
+      sellerId,
+      Number(page)
+    );
 
-      const count = await this.serviceInstance.countReview(sellerId, itemId);
-      if (retrievedReviews.length == 0) {
-        res.status(200).json({ message: "Not found reviews", data: [] });
-        return;
-      }
-
-      const totalPages = Math.ceil(count / 10);
-      const remainPages = totalPages - Number(page);
-      res.status(200).json({
-        paginationInfo: {
-          currentPage: Number(page),
-          totalPages: totalPages,
-          totalReviews: count,
-          remainPages: remainPages > 0 ? remainPages : 0,
-          itemsPerPage: 10,
-        },
-        message: "Reviews get Successfully",
-        data: retrievedReviews,
-      });
-    } catch (error) {
-      this.handleError(res, "Failed to get items", error);
+    const count = await this.serviceInstance.countReview(sellerId, itemId);
+    if (retrievedReviews.length == 0) {
+      res.status(200).json({ message: "Not found reviews", data: [] });
+      return;
     }
+
+    const totalPages = Math.ceil(count / 10);
+    const remainPages = totalPages - Number(page);
+    res.status(200).json({
+      paginationInfo: {
+        currentPage: Number(page),
+        totalPages: totalPages,
+        totalReviews: count,
+        remainPages: remainPages > 0 ? remainPages : 0,
+        itemsPerPage: 10,
+      },
+      message: "Reviews get Successfully",
+      data: retrievedReviews,
+    });
   }
 
   /**
@@ -169,25 +145,18 @@ class ReviewController {
    *   - Update review for item by a buyer
    */
   async updateReview(req: Request, res: Response): Promise<void> {
-    try {
-      const { id } = req.params;
-      const buyerId = req.user?.user_id;
-      const retrievedReview = await this.serviceInstance.updateReview(
-        String(id),
-        buyerId,
-        req.body
-      );
-      if (retrievedReview == null) {
-        res.status(404).json({ message: "Not found review", data: [] });
-        return;
-      }
-      res.status(200).json({
-        message: "Review updated Successfully",
-        data: retrievedReview,
-      });
-    } catch (error) {
-      this.handleError(res, "Failed to update review!", error);
+    const { id } = req.params;
+    const buyerId = req.user?.user_id;
+    const retrievedReview = await this.serviceInstance.updateReview(
+      String(id),
+      buyerId,
+      req.body
+    );
+    if (retrievedReview == 0) {
+      res.status(404).json({ message: "Not found review" });
+      return;
     }
+    res.status(200).json({ message: "Review updated successfully" });
   }
 
   /**
@@ -210,21 +179,17 @@ class ReviewController {
    *   - Counts reviews for a specific item reviewed by a specific user (by userId & itemId) [Admin Only].
    */
   async countReview(req: Request, res: Response): Promise<void> {
-    try {
-      const { itemId, userId } = req.body;
-      const sellerId = userId ? userId : req.user?.user_id;
-      const count = await this.serviceInstance.countReview(sellerId, itemId);
-      if (count == 0) {
-        res.status(404).json({ message: "Not found reviews", data: 0 });
-        return;
-      }
-      res.status(200).json({
-        message: "Count review fetched successfully",
-        data: count,
-      });
-    } catch (error) {
-      this.handleError(res, "Failed to fetch count review!", error);
+    const { itemId, userId } = req.body;
+    const sellerId = userId ? userId : req.user?.user_id;
+    const count = await this.serviceInstance.countReview(sellerId, itemId);
+    if (count == 0) {
+      res.status(404).json({ message: "Not found reviews", data: 0 });
+      return;
     }
+    res.status(200).json({
+      message: "Count review fetched successfully",
+      data: count,
+    });
   }
 
   /**
@@ -244,23 +209,17 @@ class ReviewController {
    *   - An admin can delete any review using `reviewId` only.
    */
   async deleteReview(req: Request, res: Response): Promise<void> {
-    try {
-      const { reviewId } = req.body;
-      const sellerId = req.user?.user_id;
-      const retrievedReview = await this.serviceInstance.deleteReview(
-        String(reviewId),
-        sellerId
-      );
-      if (retrievedReview == 0) {
-        res.status(404).json({ message: "Not found review", data: [] });
-        return;
-      }
-      res
-        .status(200)
-        .json({ message: "Review deleted Successfully", data: [] });
-    } catch (error) {
-      this.handleError(res, "Failed to delete review!", error);
+    const { reviewId } = req.body;
+    const sellerId = req.user?.user_id;
+    const retrievedReview = await this.serviceInstance.deleteReview(
+      String(reviewId),
+      sellerId
+    );
+    if (retrievedReview == 0) {
+      res.status(404).json({ message: "Not found review", data: [] });
+      return;
     }
+    res.status(200).json({ message: "Review deleted Successfully", data: [] });
   }
 
   /**
@@ -283,26 +242,22 @@ class ReviewController {
    *   - Retrieves the average review for a specific item reviewed by a specific user (by userId & itemId) [Admin Only].
    */
   async getReviewAverage(req: Request, res: Response): Promise<void> {
-    try {
-      const { itemId, userId } = req.body;
-      const sellerId = userId ? userId : req.user?.user_id;
-      const reviewAverage = await this.serviceInstance.getReviewAverage(
-        sellerId,
-        itemId
-      );
+    const { itemId, userId } = req.body;
+    const sellerId = userId ? userId : req.user?.user_id;
+    const reviewAverage = await this.serviceInstance.getReviewAverage(
+      sellerId,
+      itemId
+    );
 
-      if (!reviewAverage) {
-        res.status(404).json({ message: "No reviews found", data: 0 });
-        return;
-      }
-
-      res.status(200).json({
-        message: "Get average review Successfully",
-        data: reviewAverage,
-      });
-    } catch (error) {
-      this.handleError(res, "Failed to get average review!", error);
+    if (!reviewAverage) {
+      res.status(404).json({ message: "No reviews found", data: 0 });
+      return;
     }
+
+    res.status(200).json({
+      message: "Get average review Successfully",
+      data: reviewAverage,
+    });
   }
 }
 

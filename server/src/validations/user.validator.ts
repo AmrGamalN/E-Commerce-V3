@@ -1,50 +1,59 @@
 import { check } from "express-validator";
 import { checkArray } from "./general.validator";
 
-export const userValidator = [
+export const userUpdateValidator = [
   check("name")
-    .trim()
-    .isString()
     .notEmpty()
     .withMessage("NAME IS REQUIRED")
+    .trim()
+    .isString()
     .isLength({ min: 1, max: 30 })
     .withMessage("NAME MUST BE BETWEEN 1 AND 30 CHARACTERS.")
     .matches(/^[a-zA-Z ]+$/)
-    .withMessage("MUST CONTAIN ONLY LETTERS"),
+    .withMessage("MUST CONTAIN ONLY LETTERS")
+    .optional(),
 
   check("mobile")
+    .notEmpty()
+    .withMessage("MOBILE IS REQUIRED")
     .trim()
     .whitelist("0-9+")
     .isMobilePhone("ar-EG")
     .withMessage("INVALID PHONE NUMBER")
     .isLength({ min: 13, max: 13 })
-    .withMessage("PHONE NUMBER MUST BE 13 DIGITS."),
+    .withMessage("PHONE NUMBER MUST BE 13 DIGITS.")
+    .optional(),
 
-  check("profileImage").isString().optional(),
-
-  check("coverImage").isString().optional(),
+  check("profileImage").isString().optional(true),
+  check("coverImage").isString().optional(true),
 
   check("paymentOptions")
-    .isArray({ min: 1 })
+    .notEmpty()
     .withMessage("PAYMENT OPTIONS ARE REQUIRED")
+    .isArray({ min: 1 })
     .matches(/^[a-zA-Z]+$/)
-    .withMessage("MUST CONTAIN ONLY LETTERS"),
+    .withMessage("MUST CONTAIN ONLY LETTERS")
+    .optional(),
 
   check("description")
-    .optional()
     .trim()
     .matches(/^[a-zA-Z]+$/)
     .withMessage("MUST CONTAIN ONLY LETTERS")
     .isLength({ min: 1, max: 100 })
-    .withMessage("DESCRIPTION MUST BE BETWEEN 1 AND 100 CHARACTERS."),
+    .withMessage("DESCRIPTION MUST BE BETWEEN 1 AND 100 CHARACTERS.")
+    .optional(true),
 
   check("addressIds")
+    .notEmpty()
+    .withMessage("ADDRESS IDS ARE REQUIRED")
     .isArray({ min: 1 })
-    .withMessage("ADDRESS IDS ARE REQUIRED"),
+    .optional(),
 
   check("allowedToShow")
+    .notEmpty()
+    .withMessage("ALLOWED TO SHOW IS REQUIRED")
     .isArray({ min: 1 })
-    .withMessage("ALLOWED TO SHOW IS REQUIRED"),
+    .optional(),
 
   checkArray(
     "allowedToShow",
@@ -55,6 +64,7 @@ export const userValidator = [
     "paymentOptions",
     "PAYMENT OPTIONS MUST CONTAIN ONLY ALPHABETICAL CHARACTERS"
   ),
+
   checkArray(
     "addressIds",
     "ADDRESS IDS MUST CONTAIN ONLY ALPHABETICAL CHARACTERS"

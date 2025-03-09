@@ -12,7 +12,8 @@ import ReportRouters from "./routes/report.routes";
 import FollowRouters from "./routes/follow.routes";
 import OrderRouters from "./routes/order.routes";
 import CouponRouters from "./routes/coupon.routes";
-import AuthenticationMiddleware from "./middlewares/auth.middleware";
+import WishListRouters from "./routes/wishList.routes";
+import AuthenticationMiddleware from "./middlewares/authentication";
 const router = Router();
 
 // Health Check
@@ -40,8 +41,7 @@ router.use("/report", ReportRouters);
 router.use("/follow", FollowRouters);
 router.use("/order", OrderRouters);
 router.use("/coupon", CouponRouters);
-
-// router.use("/cart");
+router.use("/wishlist", WishListRouters);
 // router.use("/payment");
 
 export default router;

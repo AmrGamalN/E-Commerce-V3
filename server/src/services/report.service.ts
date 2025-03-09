@@ -12,6 +12,12 @@ import {
   ReportFeedBackDto,
 } from "../dto/report.dto";
 import mongoose from "mongoose";
+import {
+  formatDataAdd,
+  formatDataGetAll,
+  formatDataGetOne,
+  formatDataUpdate,
+} from "../utils/dataFormatter";
 
 class ReportService {
   private static Instance: ReportService;
@@ -23,16 +29,15 @@ class ReportService {
     return ReportService.Instance;
   }
 
-  // Used to add report to ite or conversation
+  // Used to add report to item or conversation
   async addReport(user: any, body: ReportAddDtoType): Promise<object> {
     try {
       const { modelId, reportType, subject, reason } = body;
-      const reporterId = user?.user_id;
 
       // Check if a report already exists
       const existingReport = await Report.findOne({
         modelId,
-        reporterId,
+        reporterId: user?.user_id,
       })
         .select(["modelId"])
         .lean();
@@ -44,9 +49,9 @@ class ReportService {
       // Determine the appropriate model (Item or Conversation)
       const ReportedModel = reportType === "item" ? Item : Conversation;
       const reportedEntity = await (ReportedModel as any)
-        .findOne({
-          _id: modelId,
-          $or: [{ participants: { $all: [reporterId] } }, { _id: modelId }],
+        .findById({
+          _id: new mongoose.Types.ObjectId(modelId),
+          $or: [{ participants: { $all: [user?.user_id] } }, { _id: modelId }],
         })
         .select(["userId", "participants"])
         .lean();
@@ -56,25 +61,24 @@ class ReportService {
       }
 
       // Create the report
-      const report = new Report({
+      const addReport = await Report.create({
         modelId,
-        reporterId,
+        reporterId: user?.user_id,
         reporterName: user?.name,
         reporterEmail: user?.email,
         reportedUserId:
           reportType === "item"
             ? reportedEntity.userId
             : reportedEntity.participants?.find(
-                (id: string) => id !== reporterId
+                (id: string) => id !== user?.user_id
               ),
         reportType,
         subject,
         reason,
       });
-      await report.save();
       return {
         message: `The report ${reportType} has been added successfully and we will respond to your email '${user?.email}' within 48 hours.`,
-        data: report,
+        data: addReport,
       };
     } catch (error) {
       throw new Error(
@@ -88,22 +92,11 @@ class ReportService {
   // Get Report by itemId or conversationId and userId
   async getReport(reportId: string, userId: string): Promise<ReportDtoType> {
     try {
-      const retrievedReport = await Report.findOne({
+      const retrievedReport = await Report.findById({
         _id: reportId,
         reporterId: userId,
-      });
-
-      if (retrievedReport == null) {
-        throw new Error("Report not found");
-      }
-      const { _id, ...reportData } = retrievedReport.toObject();
-      const parsed = ReportDto.safeParse(reportData);
-
-      if (!parsed.success) {
-        throw new Error("Invalid report data");
-      }
-      const report = { _id, ...parsed.data };
-      return report;
+      }).lean();
+      return formatDataGetOne(retrievedReport, ReportDto);
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error fetching report"
@@ -116,17 +109,8 @@ class ReportService {
     try {
       const retrievedReport = await Report.find({
         reporterId: userId,
-      });
-
-      const reportDto = retrievedReport.map((report) => {
-        const { _id, ...reports } = report.toObject();
-        const parsed = ReportDto.safeParse(reports);
-        if (!parsed.success) {
-          throw new Error("Invalid report data");
-        }
-        return { _id, ...parsed.data };
-      });
-      return reportDto;
+      }).lean();
+      return formatDataGetAll(retrievedReport, ReportDto);
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error fetching report"
@@ -137,27 +121,20 @@ class ReportService {
   // Update report by itemId or conversationId and userId
   async updateReport(
     userId: string,
-    body: ReportUpdateDtoType
-  ): Promise<ReportUpdateDtoType | null> {
+    data: ReportUpdateDtoType
+  ): Promise<number> {
     try {
-      const reportId = body.modelId;
-      const parsed = ReportUpdateDto.safeParse(body);
-      if (!parsed.success) {
-        throw new Error("Invalid report data");
-      }
-
-      const updatedReport = await Report.findOneAndUpdate(
+      const parsed = formatDataUpdate(data, ReportUpdateDto);
+      const updatedReport = await Report.updateOne(
         {
-          _id: reportId,
+          _id: new mongoose.Types.ObjectId(data.modelId),
           reporterId: userId,
         },
         {
-          $set: parsed.data,
-        },
-        { new: true, runValidators: true }
+          $set: parsed,
+        }
       );
-
-      return updatedReport ? updatedReport.toObject() : null;
+      return updatedReport.matchedCount;
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error updating report"
@@ -193,17 +170,13 @@ class ReportService {
   }
 
   async feedBackReport(
-    body: ReportFeedBackDtoType,
+    data: ReportFeedBackDtoType,
     adminId: string
   ): Promise<object> {
     try {
-      const parsed = ReportFeedBackDto.safeParse(body);
-      if (!parsed.success) {
-        throw new Error("Invalid report data");
-      }
-
+      const parsed = formatDataAdd(data, ReportFeedBackDto);
       const result = await Report.aggregate([
-        { $match: { _id: new mongoose.Types.ObjectId(body.modelId) } },
+        { $match: { _id: new mongoose.Types.ObjectId(data.modelId) } },
         {
           $lookup: {
             from: "users",
@@ -243,12 +216,12 @@ class ReportService {
       }
 
       await Report.updateOne(
-        { _id: body.modelId },
+        { _id: data.modelId },
         {
           $set: {
-            status: parsed.data.status,
+            status: parsed.status,
             feedBack: {
-              ...parsed.data,
+              ...parsed,
               replyId: adminId,
               replyName: adminName,
             },
@@ -259,7 +232,7 @@ class ReportService {
         report.reporterEmail,
         "",
         "Report feedback",
-        `Your report regarding "${report.subject}" has received feedback: ${body.message}`
+        `Your report regarding "${report.subject}" has received feedback: ${data.message}`
       );
 
       return { message: "Feedback added successfully" };

@@ -7,6 +7,13 @@ import {
 } from "../dto/review.dto";
 import Item from "../models/mongodb/item.model";
 import User from "../models/mongodb/user.model";
+import {
+  formatDataAdd,
+  formatDataGetAll,
+  formatDataGetOne,
+  formatDataUpdate,
+} from "../utils/dataFormatter";
+import mongoose from "mongoose";
 
 class ReviewService {
   private static Instance: ReviewService;
@@ -27,6 +34,8 @@ class ReviewService {
     itemId: string
   ): Promise<ReviewDtoAddType> {
     try {
+      const parsed = formatDataAdd(data, ReviewAddDto);
+
       // Prevent buyer from rating the same item twice
       const existingReview = await Review.findOne({
         itemId: itemId,
@@ -37,28 +46,34 @@ class ReviewService {
         throw new Error("You have already reviewed this item.");
       }
 
-      const parsed = ReviewAddDto.safeParse(data);
-      if (!parsed.success) {
-        throw new Error("Invalid review data");
-      }
-
       // Get seller id && create review && update item to add review id in reviewId array
-      const item = await Item.findById({ _id: itemId }).select("userId").lean();
-      const review = await Review.create({
-        ...parsed.data,
+      // const item = await Item.findById({ _id: itemId }).select("userId").lean();
+      const review = new Review({
+        ...parsed,
         itemId,
         buyerId: buyerId,
-        buyerName:buyerName,
-        sellerId: item?.userId,
+        buyerName: buyerName,
+        sellerId: undefined,
       });
 
-      await Promise.all([
-        Item.findByIdAndUpdate(itemId, {
-          $push: { reviewId: review._id },
-        }),
-        review.save(),
-      ]);
+      const item = await Item.findByIdAndUpdate(
+        { _id: new mongoose.Types.ObjectId(itemId) },
+        { $push: { reviewId: review._id } },
+        { new: true }
+      )
+        .select("userId")
+        .lean();
 
+      if (item?.userId == buyerId) {
+        throw new Error("You cannot add a review to your item");
+      }
+
+      if (item?.userId) {
+        review.sellerId = item.userId;
+        await review.save();
+      }
+
+      await review.save();
       return review;
     } catch (error) {
       throw new Error(
@@ -70,20 +85,11 @@ class ReviewService {
   // Get Review
   async getReview(reviewId: string, userId: string): Promise<ReviewDtoType> {
     try {
-      const retrievedReview = await Review.findOne({
-        _id: reviewId,
+      const retrievedReview = await Review.findById({
+        _id: new mongoose.Types.ObjectId(reviewId),
         sellerId: userId,
-      });
-
-      if (retrievedReview == null) {
-        throw new Error("Review not found");
-      }
-      const parsed = ReviewDto.safeParse(retrievedReview);
-      if (!parsed.success) {
-        throw new Error("Invalid review data");
-      }
-      const review = { _id: retrievedReview?._id, ...parsed.data };
-      return review;
+      }).lean();
+      return formatDataGetOne(retrievedReview, ReviewDto);
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error fetching review"
@@ -102,17 +108,9 @@ class ReviewService {
         sellerId: sellerId,
       })
         .skip(10 * (page - 1))
-        .limit(10);
-
-      const reviewDto = retrievedReview.map((review) => {
-        const { _id, ...reviews } = review.toObject();
-        const parsed = ReviewDto.safeParse(reviews);
-        if (!parsed.success) {
-          throw new Error("Invalid review data");
-        }
-        return { _id, ...parsed.data };
-      });
-      return reviewDto;
+        .limit(10)
+        .lean();
+      return formatDataGetAll(retrievedReview, ReviewDto);
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error fetching review"
@@ -125,24 +123,19 @@ class ReviewService {
     reviewId: string,
     buyerId: string,
     data: ReviewDtoAddType
-  ): Promise<ReviewDtoAddType | null> {
+  ): Promise<number> {
     try {
-      const parsed = ReviewAddDto.safeParse(data);
-      if (!parsed.success) {
-        throw new Error("Invalid review data");
-      }
-      const updatedReview = await Review.findOneAndUpdate(
+      const parsed = formatDataUpdate(data, ReviewAddDto);
+      const updatedReview = await Review.updateOne(
         {
           _id: reviewId,
           buyerId: buyerId,
         },
         {
-          $set: parsed.data,
-        },
-        { new: true, runValidators: true }
+          $set: parsed,
+        }
       );
-
-      return updatedReview ? updatedReview.toObject() : null;
+      return updatedReview.modifiedCount;
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error updating review"
@@ -243,7 +236,6 @@ class ReviewService {
       rating[titleIndex] = (result.count / totalReviews) * 100;
       avgRating += (result.averageRating || 0) * (result.count / totalReviews);
     });
-
     return { avgRating, rating, totalReviews };
   }
 }

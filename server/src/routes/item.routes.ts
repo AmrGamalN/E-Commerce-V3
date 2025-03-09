@@ -1,13 +1,14 @@
-import express, { Request, Response } from "express";
+import express from "express";
 import ItemController from "../controllers/item.controller";
-import AuthenticationMiddleware from "../middlewares/auth.middleware";
-import { itemParser } from "../middlewares/parser.middleware";
+import AuthenticationMiddleware from "../middlewares/authentication";
+import { extractItemImages } from "../middlewares/extractImages";
 import { itemValidator } from "../validations/item.validator";
 import { idValidator } from "../validations/general.validator";
-import { expressValidator } from "../middlewares/express.validator.middleware";
-import { validatorBody } from "../middlewares/zod.validator.middleware";
+import { expressValidator } from "../middlewares/expressValidator";
+import { validatorBody } from "../middlewares/zodValidator";
 import { ItemAddDto } from "../dto/item.dto";
-import { uploadFile, upload } from "../middlewares/uploadFile.middleware";
+import { itemUploadImage } from "../middlewares/uploadFile";
+import { asyncHandler } from "../middlewares/handleError";
 const controller = ItemController.getInstance();
 const router = express.Router();
 
@@ -17,9 +18,7 @@ router.get(
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
-  async (req: Request, res: Response) => {
-    await controller.countItems(req, res);
-  }
+  asyncHandler(controller.countItems.bind(controller))
 );
 
 // Add item
@@ -28,14 +27,12 @@ router.post(
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
-  uploadFile(upload.fields([{ maxCount: 5, name: "itemImages" }])),
-  itemParser,
+  itemUploadImage,
+  extractItemImages,
   itemValidator,
   expressValidator,
   validatorBody(ItemAddDto),
-  async (req: Request, res: Response) => {
-    await controller.addItem(req, res);
-  }
+  asyncHandler(controller.addItem.bind(controller))
 );
 
 // Update item
@@ -44,15 +41,13 @@ router.put(
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
-  uploadFile(upload.fields([{ maxCount: 5, name: "itemImages" }])),
-  itemParser,
+  itemUploadImage,
+  extractItemImages,
   itemValidator,
   idValidator,
   expressValidator,
   validatorBody(ItemAddDto),
-  async (req: Request, res: Response) => {
-    await controller.updateItem(req, res);
-  }
+  asyncHandler(controller.updateItem.bind(controller))
 );
 
 // Filter item
@@ -61,9 +56,7 @@ router.get(
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
-  async (req: Request, res: Response) => {
-    await controller.filterItem(req, res);
-  }
+  asyncHandler(controller.filterItem.bind(controller))
 );
 
 // Delete item
@@ -74,9 +67,7 @@ router.delete(
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   idValidator,
   expressValidator,
-  async (req: Request, res: Response) => {
-    await controller.deleteItem(req, res);
-  }
+  asyncHandler(controller.deleteItem.bind(controller))
 );
 
 // Get item
@@ -87,9 +78,7 @@ router.get(
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
   idValidator,
   expressValidator,
-  async (req: Request, res: Response) => {
-    await controller.getItem(req, res);
-  }
+  asyncHandler(controller.getItem.bind(controller))
 );
 
 // Get all items
@@ -98,9 +87,7 @@ router.get(
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
-  async (req: Request, res: Response) => {
-    await controller.getAllItem(req, res);
-  }
+  asyncHandler(controller.getAllItem.bind(controller))
 );
 
 export default router;

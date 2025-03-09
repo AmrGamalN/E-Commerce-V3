@@ -20,7 +20,7 @@ const storage = multer.diskStorage({
   },
 });
 
-export const upload = multer({
+const upload = multer({
   storage: storage,
   fileFilter(req, file, callback) {
     const allowedMimeTypes = ["image/jpeg", "image/png", "image/jpg"];
@@ -40,7 +40,7 @@ export const upload = multer({
   },
 });
 
-export const uploadFile =
+const uploadFile =
   (uploadMiddleware: any) =>
   (req: Request, res: Response, next: NextFunction) => {
     uploadMiddleware(req, res, (err: any) => {
@@ -60,3 +60,14 @@ export const uploadFile =
       }
     });
   };
+
+export const userUploadImage = uploadFile(
+  upload.fields([
+    { maxCount: 1, name: "profileImage" },
+    { maxCount: 1, name: "coverImage" },
+  ])
+);
+
+export const itemUploadImage = uploadFile(
+  upload.fields([{ maxCount: 5, name: "itemImages" }])
+);

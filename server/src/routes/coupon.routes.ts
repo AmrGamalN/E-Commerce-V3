@@ -1,19 +1,20 @@
-import express, { Request, Response } from "express";
+import express from "express";
 import CouponController from "../controllers/coupon.controller";
-import AuthenticationMiddleware from "../middlewares/auth.middleware";
-import { validatorBody } from "../middlewares/zod.validator.middleware";
-import { expressValidator } from "../middlewares/express.validator.middleware";
+import AuthenticationMiddleware from "../middlewares/authentication";
+import { validatorBody } from "../middlewares/zodValidator";
+import { expressValidator } from "../middlewares/expressValidator";
 import {
   CouponAddDto,
   CouponApplyDto,
   CouponUpdateDto,
 } from "../dto/coupon.dto";
 import {
-  couponValidator,
+  couponAddValidator,
   couponApplyValidator,
   couponUpdateValidator,
 } from "../validations/coupon.validator";
 import { idValidator } from "../validations/general.validator";
+import { asyncHandler } from "../middlewares/handleError";
 
 const controller = CouponController.getInstance();
 const router = express.Router();
@@ -24,9 +25,7 @@ router.get(
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
-  async (req: Request, res: Response) => {
-    await controller.countCoupon(req, res);
-  }
+  asyncHandler(controller.countCoupon.bind(controller))
 );
 
 // Add coupon
@@ -35,12 +34,10 @@ router.post(
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
-  couponValidator,
+  couponAddValidator,
   expressValidator,
   validatorBody(CouponAddDto),
-  async (req: Request, res: Response) => {
-    await controller.addCoupon(req, res);
-  }
+  asyncHandler(controller.addCoupon.bind(controller))
 );
 
 // Update coupon
@@ -52,9 +49,7 @@ router.post(
   couponApplyValidator,
   expressValidator,
   validatorBody(CouponApplyDto),
-  async (req: Request, res: Response) => {
-    await controller.applyCoupon(req, res);
-  }
+  asyncHandler(controller.applyCoupon.bind(controller))
 );
 
 // Update coupon
@@ -66,9 +61,7 @@ router.put(
   couponUpdateValidator,
   expressValidator,
   validatorBody(CouponUpdateDto),
-  async (req: Request, res: Response) => {
-    await controller.updateCoupon(req, res);
-  }
+  asyncHandler(controller.updateCoupon.bind(controller))
 );
 
 // Delete coupon
@@ -79,9 +72,7 @@ router.delete(
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER"]),
   idValidator,
   expressValidator,
-  async (req: Request, res: Response) => {
-    await controller.deleteCoupon(req, res);
-  }
+  asyncHandler(controller.deleteCoupon.bind(controller))
 );
 
 // Get coupon
@@ -92,9 +83,7 @@ router.get(
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
   idValidator,
   expressValidator,
-  async (req: Request, res: Response) => {
-    await controller.getCoupon(req, res);
-  }
+  asyncHandler(controller.getCoupon.bind(controller))
 );
 
 // Get all coupon
@@ -103,9 +92,7 @@ router.get(
   AuthenticationMiddleware.refreshToken,
   AuthenticationMiddleware.verifyIdToken,
   AuthenticationMiddleware.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
-  async (req: Request, res: Response) => {
-    await controller.getAllCoupon(req, res);
-  }
+  asyncHandler(controller.getAllCoupon.bind(controller))
 );
 
 export default router;

@@ -73,20 +73,23 @@ export const registerValidator = [
     .withMessage("GENDER MUST BE EITHER 'MALE' OR 'FEMALE'"),
 
   check("business")
+    .customSanitizer((value) => value === "true")
     .isBoolean()
-    .withMessage("BUSINESS MUST BE TRUE OR FALSE")
-    .toBoolean(),
+    .withMessage("BUSINESS MUST BE TRUE OR FALSE"),
 
   check("personal")
+    .customSanitizer((value) => value === "true")
     .isBoolean()
-    .withMessage("PERSONAL MUST BE TRUE OR FALSE")
-    .toBoolean(),
+    .withMessage("PERSONAL MUST BE TRUE OR FALSE"),
 
   check("profileImage").isString().optional(),
 
   check("coverImage").isString().optional(),
 
   check("paymentOptions")
+    .customSanitizer((value) =>
+      typeof value === "string" ? value.split(",") : value
+    )
     .isArray({ min: 1 })
     .withMessage("PAYMENT OPTIONS ARE REQUIRED")
     .matches(/^[a-zA-Z ]+$/)
@@ -101,10 +104,16 @@ export const registerValidator = [
     .withMessage("DESCRIPTION MUST BE BETWEEN 1 AND 100 CHARACTERS."),
 
   check("addressIds")
+    .customSanitizer((value) =>
+      typeof value === "string" ? value.split(",") : value
+    )
     .isArray({ min: 1 })
     .withMessage("ADDRESS IDS ARE REQUIRED"),
 
   check("allowedToShow")
+    .customSanitizer((value) =>
+      typeof value === "string" ? value.split(",") : value
+    )
     .isArray({ min: 1 })
     .withMessage("ALLOWED TO SHOW IS REQUIRED"),
 
@@ -117,6 +126,7 @@ export const registerValidator = [
     "paymentOptions",
     "PAYMENT OPTIONS MUST CONTAIN ONLY ALPHABETICAL CHARACTERS"
   ),
+  
   checkArray(
     "addressIds",
     "ADDRESS IDS MUST CONTAIN ONLY ALPHABETICAL CHARACTERS"

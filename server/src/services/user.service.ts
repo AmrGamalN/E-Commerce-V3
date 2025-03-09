@@ -5,6 +5,7 @@ import {
   UserUpdateDtoType,
 } from "../dto/user.dto";
 import User from "../models/mongodb/user.model";
+import { formatDataGetAll, formatDataGetOne, formatDataUpdate } from "../utils/dataFormatter";
 class UserService {
   private static Instance: UserService;
   constructor() {}
@@ -20,16 +21,7 @@ class UserService {
   async getUser(userId: string): Promise<UserDtoType> {
     try {
       const userRetrieved = await User.findOne({ userId }).lean();
-      if (!userRetrieved) {
-        throw new Error("User not found");
-      }
-
-      const { _id, ...userData } = userRetrieved;
-      const parsed = UserDto.safeParse(userData);
-      if (!parsed.success) {
-        throw new Error("Invalid user data");
-      }
-      return { _id, ...parsed.data };
+      return formatDataGetOne(userRetrieved, UserDto);
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error fetching user"
@@ -46,17 +38,7 @@ class UserService {
         .lean()
         .skip((page - 1) * 10)
         .limit(10);
-
-      const userDto = userRetrieved.map((user) => {
-        const { _id, ...userData } = user;
-        const parsed = UserDto.safeParse(userData);
-        console.log(parsed.error);
-        if (!parsed.success) {
-          throw new Error(`Invalid '${role ?? "users"} data`);
-        }
-        return { _id, ...parsed.data };
-      });
-      return userDto;
+      return formatDataGetAll(userRetrieved, UserDto);
     } catch (error) {
       throw new Error(
         error instanceof Error
@@ -83,20 +65,15 @@ class UserService {
   // Update user
   async updateUser(userId: string, data: UserUpdateDtoType): Promise<number> {
     try {
-      const parsed = UserUpdateDto.safeParse(data);
-      if (!parsed.success) {
-        throw new Error("Invalid item data");
-      }
-
+      const parsed = formatDataUpdate(data, UserUpdateDto);
       const updatedUser = await User.updateOne(
         {
           userId: userId,
         },
         {
-          $set: parsed.data,
+          $set: parsed,
         }
       );
-
       return updatedUser.modifiedCount;
     } catch (error) {
       throw new Error(

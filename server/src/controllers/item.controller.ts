@@ -15,165 +15,123 @@ class ItemController {
     return ItemController.Instance;
   }
 
-  private handleError(
-    res: Response,
-    message: string,
-    error: unknown,
-    status = 400
-  ): void {
-    res.status(status).json({
-      message,
-      error: error instanceof Error ? error.message : error,
-    });
-  }
-
   // Add item
   async addItem(req: Request, res: Response): Promise<void> {
-    try {
-      const userId = req.user?.user_id;
-      const retrievedItem = await this.serviceInstance.addItem(
-        req.body,
-        userId
-      );
-      if (!retrievedItem) {
-        res.status(400).json({ message: "Failed to add item" });
-        return;
-      }
-      res.status(200).json({ message: "Item added Successfully" });
-    } catch (error) {
-      this.handleError(res, "Failed to add item", error);
+    const userId = req.user?.user_id;
+    const retrievedItem = await this.serviceInstance.addItem(req.body, userId);
+    if (!retrievedItem) {
+      res.status(400).json({ message: "Failed to add item" });
+      return;
     }
+    res.status(200).json({ message: "Item added Successfully" });
   }
 
   // Get Item
   async getItem(req: Request, res: Response): Promise<void> {
-    try {
-      const { id } = req.params;
-      const userId = req.body.userId ? req.body.userId : req.user?.user_id;
-      const retrievedItem = await this.serviceInstance.getItem(
-        String(id),
-        userId
-      );
-      if (retrievedItem?.userId == null) {
-        res.status(404).json({ message: "Not found Item", data: [] });
-        return;
-      }
-      res
-        .status(200)
-        .json({ message: "Item get Successfully", data: retrievedItem });
-    } catch (error) {
-      this.handleError(res, "Failed to get item", error);
+    const { id } = req.params;
+    const userId = req.body.userId ? req.body.userId : req.user?.user_id;
+    const retrievedItem = await this.serviceInstance.getItem(
+      String(id),
+      userId
+    );
+    if (retrievedItem?.userId == null) {
+      res.status(404).json({ message: "Not found Item", data: [] });
+      return;
     }
+    res
+      .status(200)
+      .json({ message: "Item get Successfully", data: retrievedItem });
   }
 
   // Get all items
   async getAllItem(req: Request, res: Response): Promise<void> {
-    try {
-      const { page } = req.query;
-      const userId = req.body.userId ? req.body.userId : req.user?.user_id;
-      const retrievedItems = await this.serviceInstance.getAllItem(
-        userId,
-        Number(page)
-      );
-      const count = await this.serviceInstance.countItems(userId);
-      if (retrievedItems.length == 0) {
-        res.status(200).json({ message: "Not found Items", data: [] });
-        return;
-      }
-      const totalPages = Math.ceil(count / 10);
-      const remainPages = totalPages - Number(page);
-      res.status(200).json({
-        paginationInfo: {
-          currentPage: Number(page),
-          totalPages: totalPages,
-          totalReviews: count,
-          remainPages: remainPages > 0 ? remainPages : 0,
-          itemsPerPage: 10,
-        },
-        message: "Items get Successfully",
-        data: retrievedItems,
-      });
-    } catch (error) {
-      this.handleError(res, "Failed to get items", error);
+    const { page } = req.query;
+    const userId = req.body.userId ? req.body.userId : req.user?.user_id;
+    const retrievedItems = await this.serviceInstance.getAllItem(
+      userId,
+      Number(page)
+    );
+
+    const count = await this.serviceInstance.countItems(userId);
+
+    if (retrievedItems.length == 0) {
+      res.status(200).json({ message: "Not found Items", data: [] });
+      return;
     }
+    
+    const totalPages = Math.ceil(count / 10);
+    const remainPages = totalPages - Number(page);
+    res.status(200).json({
+      paginationInfo: {
+        currentPage: Number(page),
+        totalPages: totalPages,
+        totalReviews: count,
+        remainPages: remainPages > 0 ? remainPages : 0,
+        itemsPerPage: 10,
+      },
+      message: "Items get Successfully",
+      data: retrievedItems,
+    });
   }
 
   // Update item
   async updateItem(req: Request, res: Response): Promise<void> {
-    try {
-      const { id } = req.params;
-      const userId = req.user?.user_id;
-      const retrievedItem = await this.serviceInstance.updateItem(
-        String(id),
-        userId,
-        req.body
-      );
-      if (retrievedItem == null) {
-        res.status(404).json({ message: "Not found Item", data: [] });
-        return;
-      }
-      res
-        .status(200)
-        .json({ message: "Item updated Successfully", data: retrievedItem });
-    } catch (error) {
-      this.handleError(res, "Failed to update item", error);
+    const { id } = req.params;
+    const userId = req.user?.user_id;
+    const retrievedItem = await this.serviceInstance.updateItem(
+      String(id),
+      userId,
+      req.body
+    );
+    if (retrievedItem == 0) {
+      res.status(404).json({ message: "Not found item" });
+      return;
     }
+    res.status(200).json({ message: "Item updated successfully" });
   }
 
   // Count of Item
   async countItems(req: Request, res: Response): Promise<void> {
-    try {
-      const userId = req.body.userId ? req.body.userId : req.user?.user_id;
-      const count = await this.serviceInstance.countItems(userId);
-      if (count == 0) {
-        res.status(404).json({ message: "Not found Items", data: 0 });
-        return;
-      }
-      res.status(200).json({
-        message: "Count item fetched successfully",
-        data: count,
-      });
-    } catch (error) {
-      this.handleError(res, "Failed to fetch count item!", error);
+    const userId = req.body.userId ? req.body.userId : req.user?.user_id;
+    const count = await this.serviceInstance.countItems(userId);
+    if (count == 0) {
+      res.status(404).json({ message: "Not found Items", data: 0 });
+      return;
     }
+    res.status(200).json({
+      message: "Count item fetched successfully",
+      data: count,
+    });
   }
 
   // Delete item
   async deleteItem(req: Request, res: Response): Promise<void> {
-    try {
-      const { id } = req.params;
-      const userId = req.body.userId ? req.body.userId : req.user?.user_id;
-      const retrievedItem = await this.serviceInstance.deleteItem(
-        String(id),
-        userId
-      );
-      if (retrievedItem == 0) {
-        res.status(404).json({ message: "Not found Item", data: [] });
-        return;
-      }
-      res.status(200).json({ message: "Item deleted Successfully", data: [] });
-    } catch (error) {
-      this.handleError(res, "Failed to delete item", error);
+    const { id } = req.params;
+    const userId = req.body.userId ? req.body.userId : req.user?.user_id;
+    const retrievedItem = await this.serviceInstance.deleteItem(
+      String(id),
+      userId
+    );
+    if (retrievedItem == 0) {
+      res.status(404).json({ message: "Not found Item", data: [] });
+      return;
     }
+    res.status(200).json({ message: "Item deleted Successfully", data: [] });
   }
 
   async filterItem(req: Request, res: Response): Promise<void> {
-    try {
-      const { page } = req.query;
-      const retrievedItems = await this.serviceInstance.filterItem(
-        req.query,
-        Number(page)
-      );
-      if (retrievedItems.length == 0) {
-        res.status(200).json({ message: "Not found Items", data: [] });
-        return;
-      }
-      res
-        .status(200)
-        .json({ message: "Items get Successfully", data: retrievedItems });
-    } catch (error) {
-      this.handleError(res, "Failed to get item", error);
+    const { page } = req.query;
+    const retrievedItems = await this.serviceInstance.filterItem(
+      req.query,
+      Number(page)
+    );
+    if (retrievedItems.length == 0) {
+      res.status(200).json({ message: "Not found Items", data: [] });
+      return;
     }
+    res
+      .status(200)
+      .json({ message: "Items get Successfully", data: retrievedItems });
   }
 }
 

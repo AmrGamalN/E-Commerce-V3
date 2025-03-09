@@ -1,6 +1,7 @@
-import  Conversation  from "../models/mongodb/conversation.model";
+import Conversation from "../models/mongodb/conversation.model";
 import { ConversationDtoType, ConversationDto } from "../dto/conversation.dto";
 import { MessageDtoType } from "../dto/message.dto";
+import { formatDataAdd, formatDataGetAll, formatDataGetOne } from "../utils/dataFormatter";
 
 class ConversationService {
   private static Instance: ConversationService;
@@ -15,12 +16,7 @@ class ConversationService {
   // Add conversation
   async addConversation(data: MessageDtoType): Promise<ConversationDtoType> {
     try {
-
-      const parsed = ConversationDto.safeParse(data);
-      if (!parsed.success) {
-        throw new Error("Invalid message data");
-      }
-
+      const parsed = formatDataAdd(data, ConversationDto);
       let conversation = await Conversation.findOne({
         participants: { $all: [data.senderId, data.receiverId] },
       });
@@ -48,8 +44,7 @@ class ConversationService {
           },
         });
       }
-
-      return parsed.data;
+      return parsed;
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error adding message"
@@ -67,18 +62,7 @@ class ConversationService {
         _id: conversationId,
         participants: { $all: [userId] },
       });
-
-      if (retrievedConversation == null) {
-        throw new Error("Conversation not found");
-      }
-      const { _id, ...conversationData } = retrievedConversation.toObject();
-      const parsed = ConversationDto.safeParse(conversationData);
-
-      if (!parsed.success) {
-        throw new Error("Invalid conversation data");
-      }
-      const conversation = { _id, ...parsed.data };
-      return conversation;
+      return formatDataGetOne(retrievedConversation, ConversationDto);
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error fetching conversation"
@@ -91,17 +75,8 @@ class ConversationService {
     try {
       const retrievedConversation = await Conversation.find({
         participants: { $all: [userId] },
-      });
-
-      const conversationDto = retrievedConversation.map((conversation) => {
-        const { _id, ...conversations } = conversation.toObject();
-        const parsed = ConversationDto.safeParse(conversations);
-        if (!parsed.success) {
-          throw new Error("Invalid conversation data");
-        }
-        return { _id, ...parsed.data };
-      });
-      return conversationDto;
+      }).lean();
+      return formatDataGetAll(retrievedConversation, ConversationDto);
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error fetching conversation"

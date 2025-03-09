@@ -6,8 +6,8 @@ export const FollowDto = z.object({
   followingName: z.string(),
 });
 
-export const FollowAddDto = z.object({
-  followingId: z.string(),
+export const FollowAddDto = FollowDto.pick({
+  followingId: true,
 });
 
 export type FollowDtoType = z.infer<typeof FollowDto>;

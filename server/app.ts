@@ -15,6 +15,7 @@ const xssClean = require("xss-clean");
 import helmet from "helmet";
 import http from "http";
 import { initializeSocket } from "./src/config/socket.io";
+import { errorMiddleware } from "./src/middlewares/handleError";
 dotenv.config();
 
 // Define express app & swagger
@@ -50,9 +51,13 @@ app.use(
 app.use("/api-doc", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 app.use("/api/v1", router);
 
+// Middleware used to check any path not found in route
 app.use("*", (req, res, next) => {
   res.status(404).json({ error: "Not Found" });
 });
+
+// Error handle middleware
+app.use(errorMiddleware);
 
 // Connection MongoDB  &  Firebase & redis
 Promise.all([connectToMongoDB(), auth.listUsers(1), client.connect()])

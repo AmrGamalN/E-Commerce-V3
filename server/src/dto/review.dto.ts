@@ -12,13 +12,10 @@ export const ReviewDto = z.object({
   itemId: z.string(),
 });
 
-export const ReviewAddDto = z.object({
-  rate: z.number(),
-  description: z.string(),
-  title: z
-    .enum(["bad", "average", "good", "very good", "excellent"])
-    .default("good"),
-
+export const ReviewAddDto = ReviewDto.pick({
+  rate: true,
+  description: true,
+  title: true,
 });
 
 export type ReviewDtoType = z.infer<typeof ReviewDto>;

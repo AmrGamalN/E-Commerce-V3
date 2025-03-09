@@ -1,36 +1,30 @@
 import { z } from "zod";
+import { UserDto } from "./user.dto";
 
-export const RegisterDto = z.object({
-  name: z.string().nonempty("name is required"),
-  email: z.string().email().nonempty("Email is required"),
-  password: z.string().nonempty("Password is required"),
-  mobile: z.string().nonempty("Password is required"),
-  gender: z.string(),
-  business: z.boolean().default(false),
-  personal: z.boolean().default(true),
-  coverImage: z.string().default(""),
-  paymentOptions: z
-    .array(z.string().nonempty("payment is required"))
-    .default([]),
-  description: z.string().optional().default(""),
-  addressIds: z.array(z.string().nonempty()).default([]),
-  allowedToShow: z.array(z.string()).default([]),
-  profileImage: z.string().default(""),
+export const RegisterDto = UserDto.pick({
+  name: true,
+  email: true,
+  password: true,
+  mobile: true,
+  gender: true,
+  business: true,
+  personal: true,
+  coverImage: true,
+  paymentOptions: true,
+  description: true,
+  addressIds: true,
+  allowedToShow: true,
+  profileImage: true,
 });
 
-export const LoginDto = z
-  .object({
-    email: z.string().email().nonempty("Email is required").optional(),
-    mobile: z
-      .string()
-      .nonempty("Phone is required")
-      .regex(/^\+?[1-9]\d{6,14}$/, "PLEASE ENTER A VALID MOBILE NUMBER")
-      .optional(),
-    password: z.string(),
-  })
-  .refine((data) => data.email || data.mobile, {
-    message: "EITHER EMAIL OR MOBILE IS REQUIRED",
-    path: ["email", "mobile"],
-  });
+export const LoginEmailDto = RegisterDto.pick({
+  email: true,
+  password: true,
+});
+
+export const LoginPhoneDto = RegisterDto.pick({
+  mobile: true,
+  password: true,
+});
 
 export type RegisterDtoType = z.infer<typeof RegisterDto>;

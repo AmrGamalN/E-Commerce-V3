@@ -5,6 +5,13 @@ import {
   ItemAddDto,
   ItemAddDtoType,
 } from "../dto/item.dto";
+import {
+  formatDataAdd,
+  formatDataGetAll,
+  formatDataGetOne,
+  formatDataUpdate,
+} from "../utils/dataFormatter";
+import mongoose from "mongoose";
 
 class ItemService {
   private static Instance: ItemService;
@@ -19,18 +26,13 @@ class ItemService {
   // Add item
   async addItem(data: ItemAddDtoType, userId: string): Promise<ItemDtoType> {
     try {
-      const parsed = ItemAddDto.safeParse(data);
-      if (!parsed.success) {
-        throw new Error("Invalid item data");
-      }
+      const parsed = formatDataAdd(data, ItemAddDto);
       const isDiscount = Number(data.discount) > 0 ? true : false;
-      const item = await Item.create({
-        ...parsed.data,
+      return await Item.create({
+        ...parsed,
         userId,
         isDiscount: isDiscount,
       });
-      await item.save();
-      return item;
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error adding items"
@@ -41,21 +43,11 @@ class ItemService {
   // Get Item by itemId and userId
   async getItem(itemId: string, userId: string): Promise<ItemDtoType> {
     try {
-      const retrievedItem = await Item.findOne({
-        _id: itemId,
+      const retrievedItem = await Item.findById({
+        _id: new mongoose.Types.ObjectId(itemId),
         userId: userId,
       }).lean();
-
-      if (retrievedItem?.userId == null) {
-        throw new Error("Item not found");
-      }
-
-      const { _id, ...itemData } = retrievedItem;
-      const parsed = ItemDto.safeParse(itemData);
-      if (!parsed.success) {
-        throw new Error("Invalid item data");
-      }
-      return { _id, ...parsed.data };
+      return formatDataGetOne(retrievedItem, ItemDto);
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error fetching item"
@@ -73,16 +65,7 @@ class ItemService {
         .skip(10 * (page - 1))
         .limit(10)
         .lean();
-
-      const itemDto = retrievedItem.map((item) => {
-        const { _id, ...items } = item;
-        const parsed = ItemDto.safeParse(items);
-        if (!parsed.success) {
-          throw new Error("Invalid item data");
-        }
-        return { _id, ...parsed.data };
-      });
-      return itemDto;
+      return formatDataGetAll(retrievedItem, ItemDto);
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error fetching items"
@@ -95,27 +78,21 @@ class ItemService {
     itemId: string,
     userId: string,
     data: ItemAddDtoType
-  ): Promise<ItemAddDtoType | null> {
+  ): Promise<number> {
     try {
-      const parsed = ItemAddDto.safeParse(data);
-      if (!parsed.success) {
-        throw new Error("Invalid item data");
-      }
-
+      const parsed = formatDataUpdate(data, ItemAddDto);
       const isDiscount = Number(data.discount) > 0 ? true : false;
-      const updatedItem = await Item.findOneAndUpdate(
+      const updatedItem = await Item.updateOne(
         {
           _id: itemId,
           userId: userId,
         },
         {
-          $set: parsed.data,
+          $set: parsed,
           isDiscount: isDiscount,
-        },
-        { new: true, runValidators: true }
+        }
       );
-
-      return updatedItem ? updatedItem.toObject() : null;
+      return updatedItem.matchedCount;
     } catch (error) {
       throw new Error(
         error instanceof Error ? error.message : "Error updating items"
