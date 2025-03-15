@@ -4,7 +4,7 @@ export const formatDataGetAll = (retrievedData: any, dtoSchema: any) => {
   return retrievedData.map((data: any) => {
     const { _id, ...rest } = data;
     const parsed = dtoSchema.safeParse(rest);
-    console.log(parsed.error)
+    console.log(parsed.error);
     if (!parsed.success) {
       throw new Error("Invalid data format");
     }
@@ -18,6 +18,7 @@ export const formatDataGetOne = (retrievedData: any, dtoSchema: any) => {
   }
   const { _id, ...userData } = retrievedData;
   const parsed = dtoSchema.safeParse(userData);
+  console.log(parsed.error);
   if (!parsed.success) {
     throw new Error("Invalid data format");
   }
@@ -26,6 +27,7 @@ export const formatDataGetOne = (retrievedData: any, dtoSchema: any) => {
 
 export const formatDataUpdate = (retrievedData: any, dtoSchema: any) => {
   const parsed = dtoSchema.safeParse(retrievedData);
+  console.log(parsed.error);
   if (!parsed.success) {
     throw new Error("Invalid data format");
   }
@@ -34,6 +36,8 @@ export const formatDataUpdate = (retrievedData: any, dtoSchema: any) => {
 
 export const formatDataAdd = (retrievedData: any, dtoSchema: any) => {
   const parsed = dtoSchema.safeParse(retrievedData);
+  console.log(parsed.error);
+
   if (!parsed.success) {
     throw new Error("Invalid data format");
   }

@@ -1,8 +1,9 @@
 import { NextFunction, Request, Response } from "express";
 import { auth } from "../config/firebaseConfig";
-import User from "../models/mongodb/user.model";
+import { Security } from "../models/mongodb/user/userSecurity.model";
 import axios from "axios";
 import jwt from "jsonwebtoken";
+import DashboardService from "../services/dashboard/dashboard.service";
 
 // Used to add user in request to handle in typescript
 declare module "express-serve-static-core" {
@@ -12,7 +13,20 @@ declare module "express-serve-static-core" {
   }
 }
 class AuthenticationMiddleware {
-  static async verifyIdToken(
+  private static Instance: AuthenticationMiddleware;
+  private DashboardService: DashboardService;
+  constructor() {
+    this.DashboardService = new DashboardService();
+  }
+
+  public static getInstance() {
+    if (!AuthenticationMiddleware.Instance) {
+      AuthenticationMiddleware.Instance = new AuthenticationMiddleware();
+    }
+    return AuthenticationMiddleware.Instance;
+  }
+
+  async verifyIdToken(
     req: Request,
     res: Response,
     next: NextFunction
@@ -20,7 +34,12 @@ class AuthenticationMiddleware {
     try {
       const accessToken = req.accessToken.token;
       if (!accessToken) {
-        res.status(401).json({ message: "Unauthorized: No token provided." });
+        // Update Dashboard
+        this.DashboardService.updateDashboardRecordsInCaching({
+          totalUnauthorized: 1,
+        });
+
+        res.status(401).json({ message: "unauthorized: No token provided." });
         return;
       }
 
@@ -40,18 +59,17 @@ class AuthenticationMiddleware {
         return;
       }
 
-      const user = await User.findOne({ userId: decoded?.user_id })
-        .select(["role", "mobile", "name"])
-        .lean();
+      const user = await Security.findOne({ userId: decoded?.user_id });
 
       req.user = {
         user_id: decoded.user_id,
-        email: decoded.email,
         name: user?.name,
+        email: user?.email,
         mobile: user?.mobile,
         role: user?.role,
         signWith: req.accessToken.signWith,
         isTwoFactorAuth: user?.isTwoFactorAuth,
+        lastSeen: new Date().toISOString(),
       };
 
       next();
@@ -82,7 +100,7 @@ class AuthenticationMiddleware {
   //     const role = req.user?.role.role;
 
   //     if (!userId) {
-  //       res.status(401).json({ message: "Unauthorized: Missing user ID" });
+  //       res.status(401).json({ message: "unauthorized: Missing user ID" });
   //       return;
   //     }
 
@@ -96,14 +114,19 @@ class AuthenticationMiddleware {
   //   }
   // }
 
-  public static allowTo(role: string[]) {
+  public allowTo(role: string[]) {
     return (req: Request, res: Response, next: NextFunction) => {
       const userRole = req.user?.role;
       if (!userRole) {
-        res.status(401).json({ error: "Unauthorized: No user role found" });
+        res.status(401).json({ error: "unauthorized: No user role found" });
         return;
       }
       if (!role.includes(userRole)) {
+        // Update Dashboard
+        this.DashboardService.updateDashboardRecordsInCaching({
+          totalAccessDenied: 1,
+        });
+
         res.status(403).json({ error: "Forbidden: Access denied" });
         return;
       }
@@ -111,7 +134,7 @@ class AuthenticationMiddleware {
     };
   }
 
-  static async refreshToken(
+  async refreshToken(
     req: Request,
     res: Response,
     next: NextFunction
@@ -119,9 +142,14 @@ class AuthenticationMiddleware {
     try {
       const refreshToken = req.cookies?.RefreshToken;
       if (!refreshToken) {
+        // Update Dashboard
+
+        this.DashboardService.updateDashboardRecordsInCaching({
+          totalUnauthorized: 1,
+        });
         res
           .status(401)
-          .json({ message: "Unauthorized: No refresh token provided." });
+          .json({ message: "unauthorized: No refresh token provided." });
         return;
       }
 
@@ -142,7 +170,6 @@ class AuthenticationMiddleware {
       res.status(403).json({ message: "Invalid refresh token." });
       return;
     } catch (error) {
-      console.log(error);
       res.status(500).json({
         message: "Server error while refreshing token.",
         error: error,

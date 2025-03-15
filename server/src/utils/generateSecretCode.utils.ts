@@ -1,4 +1,7 @@
 export const generateSecretCode = (): string => {
-  const secretCode = Math.random().toString(36).substr(2, 9);
-  return secretCode;
+  return Math.random().toString(36).substr(2, 9);
+};
+
+export const generateOtp = (): string => {
+  return Math.random().toString(36).substr(2, 6);
 };
