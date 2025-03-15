@@ -16,6 +16,7 @@ import helmet from "helmet";
 import http from "http";
 import { initializeSocket } from "./src/config/socket.io";
 import { errorMiddleware } from "./src/middlewares/handleError";
+import ScheduleDashboard from "./src/controllers/dashboard/scheduleDashboard.controller";
 dotenv.config();
 
 // Define express app & swagger
@@ -59,7 +60,7 @@ app.use("*", (req, res, next) => {
 // Error handle middleware
 app.use(errorMiddleware);
 
-// Connection MongoDB  &  Firebase & redis
+// Connection MongoDB & Firebase & redis
 Promise.all([connectToMongoDB(), auth.listUsers(1), client.connect()])
   .then(() => {
     const PORT = Number(process.env.PORT) || 8080;
@@ -69,6 +70,10 @@ Promise.all([connectToMongoDB(), auth.listUsers(1), client.connect()])
       console.log(`API Documentation: http://localhost:${PORT}/api-docs`);
       console.log("Firebase Authentication is working!");
       console.log("Redis is connected!");
+
+      // Initialize schedule dashboard jobs
+      const scheduler = ScheduleDashboard.getInstance();
+      scheduler.initializeJobs();
     });
   })
   .catch((err) => {
