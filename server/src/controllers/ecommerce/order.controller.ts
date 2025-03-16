@@ -118,6 +118,23 @@ class OrderController {
     }
     res.status(200).json(deletedOrder);
   }
+
+  // Filter order by status and is  sold or bought
+  async filterOrder(req: Request, res: Response): Promise<void> {
+    const userId = req.body.userId ? req.body.userId : req.user?.user_id;
+    const retrievedOrder = await this.serviceInstance.filterOrder(
+      req.body,
+      userId
+    );
+    if (retrievedOrder.length == 0) {
+      res.status(200).json({ message: "Not found Order", data: [] });
+      return;
+    }
+    res.status(200).json({
+      message: "Order get Successfully",
+      data: retrievedOrder,
+    });
+  }
 }
 
 export default OrderController;

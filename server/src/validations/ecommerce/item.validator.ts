@@ -1,4 +1,4 @@
-import { check } from "express-validator";
+import { check, query } from "express-validator";
 import { checkArray } from "../general.validator";
 
 export const itemValidator = [
@@ -180,4 +180,89 @@ export const itemStatusValidator = [
     .withMessage(
       "status MUST CONTAIN ONLY 'underReview' 'approved' 'published' 'reject'"
     ),
+];
+
+export const itemFilterValidator = [
+  query("avgRating")
+    .optional()
+    .isFloat({ min: 1, max: 5 })
+    .withMessage("AVG RATING MUST BE A NUMBER BETWEEN 1 AND 5")
+    .toInt(),
+
+  query("title")
+    .optional()
+    .isString()
+    .isIn(["bad", "average", "good", "very_good", "excellent"])
+    .withMessage(
+      "TITLE MUST BE ONE OF: 'BAD', 'AVERAGE', 'GOOD', 'VERY_GOOD', 'EXCELLENT'"
+    ),
+
+  query("communications")
+    .optional()
+    .isString()
+    .withMessage("COMMUNICATIONS MUST BE A STRING"),
+
+  query("min")
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage("MIN MUST BE A POSITIVE NUMBER")
+    .toInt(),
+
+  query("max")
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage("MAX MUST BE A POSITIVE NUMBER")
+    .toInt(),
+
+  query("from")
+    .optional()
+    .isISO8601()
+    .withMessage("FROM MUST BE A VALID DATE")
+    .toDate(),
+
+  query("to")
+    .optional()
+    .isISO8601()
+    .withMessage("TO MUST BE A VALID DATE")
+    .toDate(),
+
+  query("discount")
+    .optional()
+    .isBoolean()
+    .withMessage("DISCOUNT MUST BE TRUE OR FALSE")
+    .toBoolean(),
+
+  query("allowNegotiate")
+    .optional()
+    .isBoolean()
+    .withMessage("ALLOW NEGOTIATE MUST BE TRUE OR FALSE")
+    .toBoolean(),
+
+  query("category")
+    .optional()
+    .isString()
+    .withMessage("CATEGORY MUST BE A STRING"),
+
+  query("subcategory")
+    .optional()
+    .isString()
+    .withMessage("SUBCATEGORY MUST BE A STRING"),
+
+  query("brand").optional().isString().withMessage("BRAND MUST BE A STRING"),
+
+  query("type").optional().isString().withMessage("TYPE MUST BE A STRING"),
+
+  query("condition")
+    .optional()
+    .isString()
+    .withMessage("CONDITION MUST BE A STRING"),
+
+  query("location")
+    .optional()
+    .isString()
+    .withMessage("LOCATION MUST BE A STRING"),
+
+  query("color").optional().isString().withMessage("COLOR MUST BE A STRING"),
+
+  query("size").optional().isString().withMessage("SIZE MUST BE A STRING"),
 ];

@@ -49,5 +49,7 @@ export const UserUpdateDto = UserDto.pick({
     name: z.string(),
   });
 
+
+
 export type UserUpdateDtoType = z.infer<typeof UserUpdateDto>;
 export type UserDtoType = z.infer<typeof UserDto>;

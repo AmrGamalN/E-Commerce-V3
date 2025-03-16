@@ -186,12 +186,29 @@ class ItemService {
     page: number = 1
   ): Promise<ItemDtoType[]> {
     const query: Record<string, any> = {};
+    const ratingIndexMap: Record<string, number> = {
+      bad: 0,
+      average: 1,
+      good: 2,
+      very_good: 3,
+      excellent: 4,
+    };
+
+    if (filters.avgRating) {
+      query["rate.avgRating"] = { $gte: filters.avgRating };
+    }
+
+    if (filters.title && ratingIndexMap[filters.title] !== undefined) {
+      const index = ratingIndexMap[filters.title];
+      query[`rate.rating.${index}`] = { $gte: 1 };
+    }
+
     if (filters.communications) {
       query["communications"] = filters.communications;
     }
 
     if (filters.min && filters.max) {
-      query["price"] = { $gte: Number(filters.min), $lte: Number(filters.max) };
+      query["price"] = { $gte: filters.min, $lte: filters.max };
     }
 
     if (filters.from && filters.to) {

@@ -9,6 +9,7 @@ import {
   orderAddValidator,
   orderUpdateValidator,
   orderStatusValidator,
+  orderFilterValidator,
 } from "../../validations/ecommerce/order.validator";
 import { idValidator } from "../../validations/general.validator";
 import { asyncHandler } from "../../middlewares/handleError";
@@ -69,6 +70,17 @@ router.delete(
   idValidator,
   expressValidator,
   asyncHandler(controller.deleteOrder.bind(controller))
+);
+
+// Filter order
+router.get(
+  "/filter",
+  authMiddlewareService.refreshToken,
+  authMiddlewareService.verifyIdToken,
+  authMiddlewareService.allowTo(["USER", "ADMIN", "MANAGER", "CALL_CENTER"]),
+  orderFilterValidator,
+  expressValidator,
+  asyncHandler(controller.filterOrder.bind(controller))
 );
 
 // Get order
