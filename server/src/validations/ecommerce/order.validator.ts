@@ -81,5 +81,50 @@ export const orderStatusValidator = [
     ),
 ];
 
+export const orderFilterValidator = [
+  check("page")
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage("PAGE MUST BE A POSITIVE INTEGER"),
+  
+  check("orderType")
+    .optional()
+    .isBoolean()
+    .withMessage("ORDER TYPE MUST BE BOOLEAN"),
+
+  check("from")
+    .optional()
+    .isDate()
+    .withMessage("MUST BE DATE")
+    .isISO8601()
+    .withMessage(
+      "Invalid date format, e.g., YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss.sssZ"
+    ),
+
+  check("to")
+    .optional()
+    .isDate()
+    .withMessage("MUST BE DATE")
+    .isISO8601()
+    .withMessage(
+      "Invalid date format, e.g., YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss.sssZ"
+  ),
+  
+  check("status")
+    .optional()
+    .trim()
+    .isIn([
+      "pending",
+      "processing",
+      "shipped",
+      "delivered",
+      "refund",
+      "cancelled",
+    ])
+    .withMessage(
+      "STATUS MUST BE ONE OF: 'pending', 'processing', 'shipped', 'delivered', 'refund', 'cancelled'"
+    ),
+];
+
 export const orderAddValidator = orderValidatorFactory(false);
 export const orderUpdateValidator = orderValidatorFactory(true);

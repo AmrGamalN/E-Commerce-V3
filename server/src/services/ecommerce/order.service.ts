@@ -286,6 +286,42 @@ class OrderService {
       );
     }
   }
+
+  // Filter order by status and is  sold or bought
+  async filterOrder(
+    filters: Record<string, any>,
+    userId: string
+  ): Promise<OrderDtoType[]> {
+    try {
+      const query: Record<string, any> = {};
+      const page = Math.max(filters.page, 1);
+      filters.orderType === true
+        ? (query["sellerId"] = userId)
+        : (query["buyerId"] = userId);
+
+      if (filters.status) {
+        query["status"] = filters.status;
+      }
+
+      if (filters.from && filters.to) {
+        query["createdAt"] = {
+          $gte: new Date(filters.from),
+          $lte: new Date(filters.to),
+        };
+      }
+
+      const filterOrder = await Order.find(query)
+        .skip((page - 1) * 10)
+        .limit(10)
+        .lean();
+
+      return formatDataGetAll(filterOrder, OrderDto);
+    } catch (error) {
+      throw new Error(
+        error instanceof Error ? error.message : "Error deleting order"
+      );
+    }
+  }
 }
 
 export default OrderService;

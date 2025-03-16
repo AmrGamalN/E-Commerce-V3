@@ -3,7 +3,10 @@ import ItemController from "../../controllers/ecommerce/item.controller";
 import AuthenticationMiddleware from "../../middlewares/authentication";
 const authMiddlewareService = AuthenticationMiddleware.getInstance();
 import { extractItemImages } from "../../middlewares/extractImagesUrl";
-import { itemValidator } from "../../validations/ecommerce/item.validator";
+import {
+  itemFilterValidator,
+  itemValidator,
+} from "../../validations/ecommerce/item.validator";
 import { idValidator } from "../../validations/general.validator";
 import { expressValidator } from "../../middlewares/expressValidator";
 import { validatorBody } from "../../middlewares/zodValidator";
@@ -69,6 +72,8 @@ router.get(
   authMiddlewareService.refreshToken,
   authMiddlewareService.verifyIdToken,
   authMiddlewareService.allowTo(["USER", "ADMIN", "MANAGER"]),
+  itemFilterValidator,
+  expressValidator,
   asyncHandler(controller.filterItem.bind(controller))
 );
 

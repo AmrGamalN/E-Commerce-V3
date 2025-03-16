@@ -17,6 +17,7 @@ import DashboardRouters from "./routes/dashboard/dashboard.routes";
 import ScheduleRouters from "./routes/dashboard/schedule.routes";
 import CachingRouters from "./routes/dashboard/redisCaching.routes";
 import FirebaseRouters from "./routes/dashboard/firebase.routes";
+import PaymentRouters from "./routes/payment/payment.routes";
 import AuthenticationMiddleware from "./middlewares/authentication";
 const authMiddlewareService = AuthenticationMiddleware.getInstance();
 
@@ -53,6 +54,6 @@ router.use("/dashboard", DashboardRouters);
 router.use("/schedule", ScheduleRouters);
 router.use("/cache", CachingRouters);
 router.use("/firebase", FirebaseRouters);
-// router.use("/payment");
+router.use("/payment", PaymentRouters);
 
 export default router;
